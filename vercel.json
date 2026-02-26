@@ -2,13 +2,8 @@
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "functions": {
-    "api/**/*.py": {
-      "runtime": "python3.9"
+    "api/*.py": {
+      "runtime": "python3.12"
     }
-  },
-  "env": {
-    "GEMINI_API_KEY": "AIzaSyAOskxKqsmk718oCtgcXS1fW4yBCOy90Wo",
-    "SUPABASE_URL": "https://hkurtoonrpxnrspmuzgt.supabase.co",
-    "SUPABASE_KEY": "sb_publishable_G3X4bzQpmaQ-GRjMRvQhhw_ft3Feab9"
   }
 }
