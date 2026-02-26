@@ -140,4 +140,63 @@ ${aspDesc}
   }
 }
 
-module.exports = { calcPositions, findAspects, geocode, sbGetUser, sbGetForecast, sbSaveForecast, generateForecast }
+const ELEMENTS = {
+  'Овен':'Огонь','Лев':'Огонь','Стрелец':'Огонь',
+  'Телец':'Земля','Дева':'Земля','Козерог':'Земля',
+  'Близнецы':'Воздух','Весы':'Воздух','Водолей':'Воздух',
+  'Рак':'Вода','Скорпион':'Вода','Рыбы':'Вода',
+}
+
+const ELEMENT_COMPAT = {
+  'Воздух-Воздух':90,'Огонь-Огонь':88,'Вода-Вода':88,
+  'Земля-Земля':85,'Огонь-Воздух':85,'Земля-Вода':80,
+  'Воздух-Вода':70,'Огонь-Земля':58,'Огонь-Вода':55,
+  'Воздух-Земля':62,
+}
+
+function getCompatScore(sign1, sign2) {
+  const e1 = ELEMENTS[sign1], e2 = ELEMENTS[sign2]
+  const key = [e1, e2].sort().join('-')
+  const base = ELEMENT_COMPAT[key] || 70
+
+  const idx1 = ZODIAC_RU.indexOf(sign1), idx2 = ZODIAC_RU.indexOf(sign2)
+  const diff = Math.min(Math.abs(idx1 - idx2), 12 - Math.abs(idx1 - idx2))
+  const bonus = { 0:0, 1:-5, 2:8, 3:-8, 4:12, 5:-3, 6:3 }[diff] || 0
+
+  return Math.min(99, Math.max(40, base + bonus))
+}
+
+async function generateCompatibility(sign1, sign2) {
+  const score = getCompatScore(sign1, sign2)
+  const e1 = ELEMENTS[sign1], e2 = ELEMENTS[sign2]
+
+  const GEMINI_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAOskxKqsmk718oCtgcXS1fW4yBCOy90Wo'
+  const { GoogleGenerativeAI } = require('@google/generative-ai')
+  const genAI = new GoogleGenerativeAI(GEMINI_KEY)
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+
+  const prompt = `Ты опытный астролог. Опиши совместимость ${sign1} (${e1}) и ${sign2} (${e2}). Индекс совместимости: ${score}%.
+Ответь ТОЛЬКО валидным JSON без markdown:
+{"summary":"общее описание пары (2-3 предложения)","strengths":"главная сильная сторона этого союза (1 предложение)","challenges":"главная трудность (1 предложение)","advice":"совет для этой пары (1 предложение)"}`
+
+  try {
+    const result = await model.generateContent(prompt)
+    let text = result.response.text().trim()
+    if (text.includes('```')) {
+      text = text.split('```')[1]
+      if (text.startsWith('json')) text = text.slice(4)
+    }
+    const ai = JSON.parse(text.trim())
+    return { score, elements: `${e1} + ${e2}`, ...ai }
+  } catch {
+    return {
+      score, elements: `${e1} + ${e2}`,
+      summary: `${sign1} и ${sign2} создают интересный союз. Стихии ${e1} и ${e2} дополняют друг друга.`,
+      strengths: 'Взаимодополняющие качества делают этот союз уникальным.',
+      challenges: 'Потребуется взаимное понимание и терпение.',
+      advice: 'Открытый диалог — ключ к гармонии.'
+    }
+  }
+}
+
+module.exports = { calcPositions, findAspects, geocode, sbGetUser, sbGetForecast, sbSaveForecast, generateForecast, generateCompatibility }

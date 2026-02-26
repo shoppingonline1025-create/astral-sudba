@@ -55,9 +55,15 @@ select.input option { background: #1a0040; color: white; }
 }
 .result-score { font-size: 56px; font-weight: 800; line-height: 1; }
 .result-level { font-size: 18px; font-weight: 700; margin-top: 8px; }
-.result-blur {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-card);
+
+.compat-detail-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
 }
-.blur-text { font-size: 14px; color: var(--text-secondary); }
+.compat-detail-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.compat-detail-label { font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.compat-detail-text { font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.5; }
