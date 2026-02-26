@@ -21,7 +21,12 @@ function calcPositions(date) {
   const planets = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn']
   const result = {}
   for (const p of planets) {
-    const lon = Astronomy.EclipticLongitude(p, date)
+    let lon
+    if (p === 'Sun') {
+      lon = Astronomy.SunPosition(date).elon
+    } else {
+      lon = Astronomy.EclipticLongitude(p, date)
+    }
     const { sign, degree } = getSign(lon)
     result[p] = { lon: Math.round(lon * 100) / 100, sign, degree, name_ru: PLANET_RU[p] }
   }
