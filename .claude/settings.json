@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m \"Initial commit: Астральная Судьба Telegram Mini App:*)",
+      "Bash(npm install)",
+      "Bash(git add vercel.json)",
+      "Bash(git commit -m \"Add vercel.json for correct deployment config:*)",
+      "Bash(git push)"
+    ]
+  }
+}
