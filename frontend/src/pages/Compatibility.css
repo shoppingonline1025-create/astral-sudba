@@ -1,0 +1,63 @@
+.compat-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pro-banner {
+  background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(168,85,247,0.15));
+  border-color: rgba(168,85,247,0.4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.pro-icon { font-size: 40px; }
+.pro-title { font-size: 22px; font-weight: 800; }
+.pro-price { font-size: 18px; font-weight: 700; color: var(--text-secondary); }
+
+.pro-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 4px 0;
+}
+.pro-feature {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.compat-card { display: flex; flex-direction: column; gap: 12px; }
+
+.select-wrap { display: flex; flex-direction: column; gap: 6px; }
+.select-label { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.5)' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+select.input option { background: #1a0040; color: white; }
+
+.result-card {
+  text-align: center;
+  background: linear-gradient(135deg, rgba(240,165,0,0.15), rgba(124,58,237,0.15));
+  border-color: rgba(240,165,0,0.3);
+}
+.result-score { font-size: 56px; font-weight: 800; line-height: 1; }
+.result-level { font-size: 18px; font-weight: 700; margin-top: 8px; }
+.result-blur {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-card);
+}
+.blur-text { font-size: 14px; color: var(--text-secondary); }

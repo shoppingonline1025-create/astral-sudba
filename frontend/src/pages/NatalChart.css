@@ -1,0 +1,101 @@
+.natal-page {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Zodiac circle */
+.zodiac-circle-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.zodiac-circle {
+  position: relative;
+  width: 280px;
+  height: 280px;
+}
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(240,165,0,0.3);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.ring-1 { width: 260px; height: 260px; border-color: rgba(240,165,0,0.4); }
+.ring-2 { width: 200px; height: 200px; border-color: rgba(168,85,247,0.3); }
+.ring-3 { width: 140px; height: 140px; border-color: rgba(255,255,255,0.1); }
+
+.zodiac-sym {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  color: var(--color-gold);
+  text-shadow: 0 0 8px rgba(240,165,0,0.6);
+}
+.chart-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  background: radial-gradient(circle, rgba(240,165,0,0.3), rgba(168,85,247,0.2));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+.aspect-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Lists */
+.planets-list, .houses-list, .aspects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.planet-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+}
+.planet-icon { font-size: 22px; width: 30px; text-align: center; }
+.planet-info { display: flex; flex-direction: column; gap: 2px; }
+.planet-name { font-size: 15px; font-weight: 600; }
+.planet-sign { font-size: 13px; font-weight: 600; }
+
+.house-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+}
+.house-num { font-size: 18px; font-weight: 800; width: 24px; }
+.house-info { display: flex; flex-direction: column; gap: 2px; }
+.house-sign { font-size: 15px; font-weight: 600; }
+.house-topic { font-size: 12px; color: var(--text-secondary); }
+
+.aspect-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+.asp-planet { font-size: 13px; font-weight: 600; }
+.asp-type {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.asp-type.good { background: rgba(34,197,94,0.2); color: #4ade80; }
+.asp-type.hard { background: rgba(239,68,68,0.2); color: #f87171; }
+.asp-type.neutral { background: rgba(168,85,247,0.2); color: #c084fc; }

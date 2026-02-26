@@ -1,0 +1,6 @@
+fastapi==0.115.5
+uvicorn==0.32.1
+flatlib==0.2.3
+python-telegram-bot==21.7
+python-dotenv==1.0.1
+pydantic==2.10.1

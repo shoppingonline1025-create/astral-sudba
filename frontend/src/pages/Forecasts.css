@@ -1,0 +1,84 @@
+.forecasts-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.forecast-card {
+  background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(13,0,32,0.8));
+  border-color: rgba(168,85,247,0.3);
+}
+
+.forecast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.energy-badge {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.forecast-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.moments-block {
+  margin-bottom: 14px;
+}
+.moments-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.moments-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.moment-item {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.activity-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-card);
+}
+.activity-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.activity-time {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Detail cards */
+.detail-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.detail-card {
+  padding: 14px 16px;
+}
+.detail-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.detail-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
