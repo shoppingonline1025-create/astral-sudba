@@ -1,35 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { fetchForecast } from '../lib/api'
 import './Forecasts.css'
 
-const forecasts = {
-  '1day': {
-    title: 'Прогноз на Сегодня',
-    text: 'Эмоциональный день. Вы будете полны энергии — отличное время для новых начинаний.',
-    moments: ['❤️ Удача в делах', '💜 Гармония в отношениях'],
-    activity: '12:00 – 16:00',
-    energy: 8,
-  },
-  '3days': {
-    title: 'Прогноз на 3 дня',
-    text: 'Период активных изменений. Благоприятно для принятия важных решений и встреч.',
-    moments: ['⭐ Карьерный рост', '💰 Финансовая удача', '🌙 Интуиция усилена'],
-    activity: '10:00 – 14:00',
-    energy: 9,
-  },
-  'week': {
-    title: 'Прогноз на Неделю',
-    text: 'Неделя возможностей. Планеты благоволят творческим проектам и новым знакомствам.',
-    moments: ['🎨 Творческий подъём', '🤝 Удачные знакомства', '🏃 Высокая активность'],
-    activity: '09:00 – 13:00',
-    energy: 7,
-  },
-}
-
-export default function Forecasts() {
-  const [period, setPeriod] = useState('1day')
+export default function Forecasts({ user }) {
+  const [forecast, setForecast] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const navigate = useNavigate()
-  const data = forecasts[period]
+
+  useEffect(() => {
+    if (!user?.telegram_id) return
+    setLoading(true)
+    fetchForecast(user.telegram_id)
+      .then(data => { setForecast(data); setLoading(false) })
+      .catch(() => { setError('Не удалось загрузить прогноз'); setLoading(false) })
+  }, [user])
 
   return (
     <div className="page forecasts-page fade-in">
@@ -39,50 +25,63 @@ export default function Forecasts() {
         <div style={{ width: 30 }} />
       </div>
 
-      <div className="tabs">
-        <button className={`tab ${period === '1day' ? 'active' : ''}`} onClick={() => setPeriod('1day')}>На 1 день</button>
-        <button className={`tab ${period === '3days' ? 'active' : ''}`} onClick={() => setPeriod('3days')}>На 3 дня</button>
-        <button className={`tab ${period === 'week' ? 'active' : ''}`} onClick={() => setPeriod('week')}>На неделю</button>
-      </div>
+      {loading && (
+        <div className="forecast-loading">
+          <div className="loading-spinner">✨</div>
+          <p>Составляем ваш личный прогноз...</p>
+          <p className="loading-sub">Анализируем положение планет</p>
+        </div>
+      )}
 
-      <div className="forecast-card card fade-in" key={period}>
-        <div className="forecast-header">
-          <h2 className="section-title">✨ {data.title}</h2>
-          <div className="energy-badge gold">{data.energy}/10</div>
+      {error && (
+        <div className="card" style={{ textAlign: 'center', padding: 24 }}>
+          <p style={{ color: 'var(--text-secondary)' }}>{error}</p>
+          <button className="btn-primary" style={{ marginTop: 12 }}
+            onClick={() => window.location.reload()}>Повторить</button>
         </div>
+      )}
 
-        <p className="forecast-text">{data.text}</p>
+      {forecast && !loading && (
+        <>
+          {/* Главная карточка */}
+          <div className="forecast-card card fade-in">
+            <div className="forecast-header">
+              <h2 className="section-title">✨ {forecast.title}</h2>
+              <div className="energy-badge gold">{forecast.energy}/10</div>
+            </div>
 
-        <div className="moments-block">
-          <p className="moments-title">Ключевые моменты:</p>
-          <ul className="moments-list">
-            {data.moments.map((m, i) => (
-              <li key={i} className="moment-item">{m}</li>
-            ))}
-          </ul>
-        </div>
+            <p className="forecast-moon">{forecast.moon}</p>
+            <p className="forecast-text">{forecast.summary}</p>
 
-        <div className="activity-block">
-          <span className="activity-label">⏰ Время активности:</span>
-          <span className="activity-time gold">{data.activity}</span>
-        </div>
-      </div>
+            <div className="activity-block">
+              <span className="activity-label">⏰ Лучшее время:</span>
+              <span className="activity-time gold">{forecast.best_time}</span>
+            </div>
+          </div>
 
-      {/* Detailed sections */}
-      <div className="detail-cards">
-        <div className="card detail-card">
-          <h3 className="detail-title">💼 Карьера</h3>
-          <p className="detail-text">Марс в благоприятном аспекте усиливает вашу деловую активность. Хорошее время для переговоров.</p>
-        </div>
-        <div className="card detail-card">
-          <h3 className="detail-title">💕 Любовь</h3>
-          <p className="detail-text">Венера благоволит романтическим встречам. Партнёр оценит вашу открытость и искренность.</p>
-        </div>
-        <div className="card detail-card">
-          <h3 className="detail-title">💰 Финансы</h3>
-          <p className="detail-text">Избегайте крупных трат в первой половине дня. После полудня ситуация улучшится.</p>
-        </div>
-      </div>
+          {/* Сферы жизни */}
+          <div className="detail-cards">
+            <div className="card detail-card">
+              <h3 className="detail-title">💼 Карьера</h3>
+              <p className="detail-text">{forecast.career}</p>
+            </div>
+            <div className="card detail-card">
+              <h3 className="detail-title">💕 Отношения</h3>
+              <p className="detail-text">{forecast.love}</p>
+            </div>
+            <div className="card detail-card">
+              <h3 className="detail-title">🧘 Здоровье</h3>
+              <p className="detail-text">{forecast.health}</p>
+            </div>
+          </div>
+
+          {/* Совет дня */}
+          <div className="card advice-card">
+            <span className="advice-icon">🔮</span>
+            <p className="advice-text">«{forecast.advice}»</p>
+          </div>
+        </>
+      )}
     </div>
   )
 }

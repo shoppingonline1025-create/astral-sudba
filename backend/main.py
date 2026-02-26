@@ -1,15 +1,17 @@
+import ephem
+import math
+import os
+import json
+import requests
+from datetime import date, datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from datetime import date, datetime
-from typing import Optional
-import os
 from dotenv import load_dotenv
+import google.generativeai as genai
 
 load_dotenv()
 
 app = FastAPI(title="Астральная Судьба API")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,135 +19,251 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-class BirthDataRequest(BaseModel):
-    name: str
-    birthdate: str        # "YYYY-MM-DD"
-    birthtime: Optional[str] = "12:00"
-    birthplace: Optional[str] = "Moscow"
-    lat: Optional[float] = 55.7558
-    lon: Optional[float] = 37.6173
+genai.configure(api_key=GEMINI_KEY)
+gemini = genai.GenerativeModel("gemini-1.5-flash")
 
+# ─── Астрологические константы ───────────────────────────────────────────────
 
-class CompatibilityRequest(BaseModel):
-    sign1: str
-    sign2: str
-
-
-ZODIAC_SIGNS = [
-    "Овен", "Телец", "Близнецы", "Рак", "Лев", "Дева",
-    "Весы", "Скорпион", "Стрелец", "Козерог", "Водолей", "Рыбы"
+ZODIAC_RU = [
+    'Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева',
+    'Весы', 'Скорпион', 'Стрелец', 'Козерог', 'Водолей', 'Рыбы'
 ]
-
-COMPATIBILITY_TABLE = {
-    ("Овен", "Лев"): 95, ("Овен", "Стрелец"): 90, ("Овен", "Близнецы"): 85,
-    ("Телец", "Дева"): 95, ("Телец", "Козерог"): 92, ("Телец", "Рак"): 88,
-    ("Близнецы", "Весы"): 93, ("Близнецы", "Водолей"): 88,
-    ("Рак", "Скорпион"): 94, ("Рак", "Рыбы"): 92,
-    ("Лев", "Стрелец"): 91, ("Лев", "Овен"): 95,
-    ("Дева", "Козерог"): 93, ("Дева", "Телец"): 95,
-    ("Весы", "Водолей"): 91, ("Весы", "Близнецы"): 93,
-    ("Скорпион", "Рыбы"): 94, ("Скорпион", "Рак"): 94,
-    ("Стрелец", "Овен"): 90, ("Стрелец", "Лев"): 91,
-    ("Козерог", "Телец"): 92, ("Козерог", "Дева"): 93,
-    ("Водолей", "Близнецы"): 88, ("Водолей", "Весы"): 91,
-    ("Рыбы", "Рак"): 92, ("Рыбы", "Скорпион"): 94,
+PLANET_RU = {
+    'sun': 'Солнце ☀️', 'moon': 'Луна 🌙', 'mercury': 'Меркурий ☿',
+    'venus': 'Венера ♀️', 'mars': 'Марс ♂️',
+    'jupiter': 'Юпитер ♃', 'saturn': 'Сатурн ♄',
 }
+ASPECT_RU = {
+    'conjunction': 'Соединение ☌', 'sextile': 'Секстиль ✶',
+    'square': 'Квадрат □', 'trine': 'Трин △', 'opposition': 'Оппозиция ☍',
+}
+ASPECT_ANGLES = {'conjunction': 0, 'sextile': 60, 'square': 90, 'trine': 120, 'opposition': 180}
 
+# ─── Расчёты ─────────────────────────────────────────────────────────────────
 
-def get_compatibility_score(sign1: str, sign2: str) -> int:
-    key = (sign1, sign2)
-    rev_key = (sign2, sign1)
-    return COMPATIBILITY_TABLE.get(key, COMPATIBILITY_TABLE.get(rev_key, 65))
+def ecl_lon(planet_obj):
+    ecl = ephem.Ecliptic(planet_obj, epoch=ephem.J2000)
+    return math.degrees(ecl.lon) % 360
 
+def get_sign(lon):
+    return ZODIAC_RU[int(lon / 30) % 12], round(lon % 30, 1)
 
-def get_sun_sign(birthdate: str) -> str:
+def calc_positions(year, month, day, hour, minute, lat, lon):
+    obs = ephem.Observer()
+    obs.lat = str(lat)
+    obs.lon = str(lon)
+    obs.date = f"{year}/{month}/{day} {hour}:{minute}:00"
+    obs.pressure = 0
+    obs.epoch = ephem.J2000
+
+    planets_map = {
+        'sun': ephem.Sun(obs), 'moon': ephem.Moon(obs),
+        'mercury': ephem.Mercury(obs), 'venus': ephem.Venus(obs),
+        'mars': ephem.Mars(obs), 'jupiter': ephem.Jupiter(obs),
+        'saturn': ephem.Saturn(obs),
+    }
+    result = {}
+    for key, obj in planets_map.items():
+        lon_deg = ecl_lon(obj)
+        sign, deg = get_sign(lon_deg)
+        result[key] = {'lon': round(lon_deg, 2), 'sign': sign, 'degree': deg, 'name_ru': PLANET_RU[key]}
+    return result
+
+def find_aspects(natal, transits, orb=6):
+    aspects = []
+    for t_key, t_data in transits.items():
+        for n_key, n_data in natal.items():
+            diff = abs(t_data['lon'] - n_data['lon'])
+            if diff > 180:
+                diff = 360 - diff
+            for asp, angle in ASPECT_ANGLES.items():
+                if abs(diff - angle) <= orb:
+                    aspects.append({
+                        'transit': PLANET_RU[t_key],
+                        'aspect': ASPECT_RU[asp],
+                        'natal': PLANET_RU[n_key],
+                        'orb': round(abs(diff - angle), 1),
+                        't_sign': t_data['sign'],
+                        'n_sign': n_data['sign'],
+                    })
+    aspects.sort(key=lambda x: x['orb'])
+    return aspects[:6]
+
+def geocode(city):
     try:
-        d = datetime.strptime(birthdate, "%Y-%m-%d")
-        month, day = d.month, d.day
-        if (month == 3 and day >= 21) or (month == 4 and day <= 19): return "Овен"
-        if (month == 4 and day >= 20) or (month == 5 and day <= 20): return "Телец"
-        if (month == 5 and day >= 21) or (month == 6 and day <= 20): return "Близнецы"
-        if (month == 6 and day >= 21) or (month == 7 and day <= 22): return "Рак"
-        if (month == 7 and day >= 23) or (month == 8 and day <= 22): return "Лев"
-        if (month == 8 and day >= 23) or (month == 9 and day <= 22): return "Дева"
-        if (month == 9 and day >= 23) or (month == 10 and day <= 22): return "Весы"
-        if (month == 10 and day >= 23) or (month == 11 and day <= 21): return "Скорпион"
-        if (month == 11 and day >= 22) or (month == 12 and day <= 21): return "Стрелец"
-        if (month == 12 and day >= 22) or (month == 1 and day <= 19): return "Козерог"
-        if (month == 1 and day >= 20) or (month == 2 and day <= 18): return "Водолей"
-        return "Рыбы"
+        r = requests.get(
+            f"https://nominatim.openstreetmap.org/search?q={city}&format=json&limit=1",
+            headers={"User-Agent": "AstralSudba/1.0"}, timeout=5
+        )
+        data = r.json()
+        if data:
+            return float(data[0]['lat']), float(data[0]['lon'])
     except Exception:
-        return "Неизвестно"
+        pass
+    return 55.7558, 37.6173  # Москва fallback
 
+# ─── Supabase helpers ─────────────────────────────────────────────────────────
+
+def sb_headers():
+    return {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+    }
+
+def sb_get_user(telegram_id):
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/users?telegram_id=eq.{telegram_id}&select=*",
+        headers=sb_headers()
+    )
+    data = r.json()
+    return data[0] if data else None
+
+def sb_get_forecast(telegram_id, today):
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/forecasts?telegram_id=eq.{telegram_id}&date=eq.{today}&select=*",
+        headers=sb_headers()
+    )
+    data = r.json()
+    return data[0] if data else None
+
+def sb_save_forecast(telegram_id, today, content):
+    requests.post(
+        f"{SUPABASE_URL}/rest/v1/forecasts",
+        headers={**sb_headers(), "Prefer": "return=minimal"},
+        data=json.dumps({"telegram_id": telegram_id, "date": today, "content": content})
+    )
+
+# ─── API endpoints ────────────────────────────────────────────────────────────
 
 @app.get("/")
 def root():
     return {"status": "ok", "app": "Астральная Судьба"}
 
 
-@app.post("/api/natal-chart")
-def get_natal_chart(data: BirthDataRequest):
-    sun_sign = get_sun_sign(data.birthdate)
-    # Базовые данные (позже подключим Flatlib для точных расчётов)
-    return {
-        "name": data.name,
-        "birthdate": data.birthdate,
-        "sun_sign": sun_sign,
-        "planets": [
-            {"name": "Солнце", "sign": sun_sign, "icon": "☀️"},
-            {"name": "Луна", "sign": "Телец", "icon": "🌙"},
-            {"name": "Асцендент", "sign": "Лев", "icon": "⬆️"},
-            {"name": "Меркурий", "sign": "Рыбы", "icon": "☿"},
-            {"name": "Венера", "sign": "Козерог", "icon": "♀️"},
-            {"name": "Марс", "sign": "Скорпион", "icon": "♂️"},
-        ]
-    }
+@app.get("/api/forecast/{telegram_id}")
+async def get_forecast(telegram_id: int):
+    today = str(date.today())
 
+    # Проверяем кэш
+    cached = sb_get_forecast(telegram_id, today)
+    if cached:
+        return cached['content']
 
-@app.post("/api/compatibility")
-def get_compatibility(data: CompatibilityRequest):
-    score = get_compatibility_score(data.sign1, data.sign2)
-    if score >= 90:
-        level = "Отличная пара! ✨"
-        desc = "Сильное притяжение и мощная энергетика. Вы созданы друг для друга."
-    elif score >= 75:
-        level = "Хорошая совместимость 💜"
-        desc = "Много общего, хорошее взаимопонимание. Отношения будут гармоничными."
-    else:
-        level = "Нужна работа над отношениями 🔮"
-        desc = "Есть различия, но с взаимным уважением всё возможно."
-    return {"sign1": data.sign1, "sign2": data.sign2, "score": score, "level": level, "description": desc}
+    # Получаем пользователя
+    user = sb_get_user(telegram_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
 
+    # Парсим дату/время рождения
+    bdate = datetime.strptime(user['birthdate'], "%Y-%m-%d")
+    btime = datetime.strptime(user.get('birthtime', '12:00:00'), "%H:%M:%S")
 
-@app.get("/api/forecast/today")
-def get_today_forecast():
-    from datetime import date
-    today = date.today()
-    return {
-        "date": str(today),
-        "energy": 8,
-        "moon": "Луна в Стрельце ♐",
-        "title": "Прогноз на сегодня",
-        "text": "Эмоциональный день. Вы будете полны энергии — отличное время для новых начинаний.",
-        "moments": ["❤️ Удача в делах", "💜 Гармония в отношениях"],
-        "activity_time": "12:00 – 16:00",
-    }
+    # Геокодируем город если нет координат
+    lat = user.get('birth_lat') or 0
+    lon = user.get('birth_lon') or 0
+    if (not lat or lat == 55.7558) and user.get('birthplace'):
+        lat, lon = geocode(user['birthplace'])
 
+    # Натальная карта
+    natal = calc_positions(bdate.year, bdate.month, bdate.day, btime.hour, btime.minute, lat, lon)
 
-@app.get("/api/energy/today")
-def get_today_energy():
-    return {
-        "moon": "Луна в Стрельце ♐",
-        "lunar_day": 14,
-        "lunar_phase": "Полнолуние 🌕",
-        "energy": 9,
-        "best_time": "11:00 – 15:00",
-        "advice": "Смело идите к своим целям!",
-        "spheres": {
-            "work": 9,
-            "love": 8,
-            "health": 7,
-            "finance": 8,
+    # Сегодняшние транзиты
+    today_dt = date.today()
+    transits = calc_positions(today_dt.year, today_dt.month, today_dt.day, 12, 0, lat, lon)
+
+    # Аспекты
+    aspects = find_aspects(natal, transits)
+
+    # Формируем описание для Gemini
+    natal_desc = "\n".join([f"  {v['name_ru']}: {v['degree']}° {v['sign']}" for v in natal.values()])
+    asp_desc = "\n".join([
+        f"  {a['transit']} {a['aspect']} натальный {a['natal']} (орб {a['orb']}°)"
+        for a in aspects
+    ]) or "  Нет выраженных транзитов"
+
+    prompt = f"""Ты опытный астролог. Составь персональный прогноз на сегодня ({today}).
+
+Имя: {user['name']}
+Дата рождения: {user['birthdate']}, {user.get('birthtime','12:00')}, {user.get('birthplace','')}
+
+Натальная карта:
+{natal_desc}
+
+Активные транзиты сегодня:
+{asp_desc}
+
+Луна сегодня в знаке: {transits['moon']['sign']}
+
+Составь прогноз. Обращайся к пользователю по имени {user['name']}.
+Пиши живо, конкретно, без общих фраз. Учитывай реальные аспекты.
+
+Ответь ТОЛЬКО валидным JSON (без markdown, без ```):
+{{
+  "title": "заголовок дня (5-7 слов)",
+  "energy": <число 1-10>,
+  "moon": "Луна в {transits['moon']['sign']}",
+  "summary": "общий прогноз (3-4 предложения лично для {user['name']})",
+  "career": "карьера и дела (2-3 предложения)",
+  "love": "отношения (2 предложения)",
+  "health": "здоровье (1-2 предложения)",
+  "best_time": "лучшее время (например: 14:00–18:00)",
+  "advice": "главный совет дня (1 предложение)"
+}}"""
+
+    try:
+        response = gemini.generate_content(prompt)
+        text = response.text.strip()
+        # Убираем markdown если есть
+        if '```' in text:
+            text = text.split('```')[1]
+            if text.startswith('json'):
+                text = text[4:]
+        forecast = json.loads(text.strip())
+    except Exception as e:
+        forecast = {
+            "title": "День открытий",
+            "energy": 7,
+            "moon": f"Луна в {transits['moon']['sign']}",
+            "summary": f"Сегодня планеты создают благоприятный фон для {user['name']}. Хороший день для важных шагов.",
+            "career": "Деловая активность на подъёме. Доверяйте своим решениям.",
+            "love": "Открытость и искренность укрепят ваши отношения.",
+            "health": "Уделите время отдыху и восстановлению сил.",
+            "best_time": "12:00–16:00",
+            "advice": "Следуйте интуиции — она не подведёт.",
         }
+
+    # Сохраняем в кэш
+    sb_save_forecast(telegram_id, today, forecast)
+    return forecast
+
+
+@app.get("/api/natal-chart/{telegram_id}")
+async def get_natal_chart(telegram_id: int):
+    user = sb_get_user(telegram_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+    bdate = datetime.strptime(user['birthdate'], "%Y-%m-%d")
+    btime = datetime.strptime(user.get('birthtime', '12:00:00'), "%H:%M:%S")
+
+    lat = user.get('birth_lat') or 0
+    lon = user.get('birth_lon') or 0
+    if (not lat or lat == 55.7558) and user.get('birthplace'):
+        lat, lon = geocode(user['birthplace'])
+
+    positions = calc_positions(bdate.year, bdate.month, bdate.day, btime.hour, btime.minute, lat, lon)
+
+    return {
+        "name": user['name'],
+        "birthdate": user['birthdate'],
+        "birthplace": user.get('birthplace'),
+        "planets": [
+            {"name": v['name_ru'], "sign": v['sign'], "degree": v['degree']}
+            for v in positions.values()
+        ]
     }
