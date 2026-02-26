@@ -44,6 +44,7 @@ module.exports = async (req, res) => {
 
     res.json(forecast)
   } catch (e) {
-    res.status(500).json({ error: e.message })
+    console.error('FORECAST ERROR:', e)
+    res.status(500).json({ error: e.message || String(e) })
   }
 }
