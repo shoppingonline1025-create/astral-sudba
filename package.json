@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build"
+  },
   "dependencies": {
     "astronomy-engine": "^2.1.19",
     "@google/generative-ai": "^0.21.0"
