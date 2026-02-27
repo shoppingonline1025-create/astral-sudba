@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { fetchForecast } from '../lib/api'
 import './Home.css'
 
 function getSunSign(birthdate) {
@@ -26,15 +28,17 @@ function formatBirthdate(birthdate) {
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-const mockEnergy = {
-  score: 8,
-  moon: 'Луна в Овне 🔥',
-  tip: 'Сегодня удачное время для действий!',
-}
-
 export default function Home({ user }) {
+  const [energy, setEnergy] = useState(null)
   const navigate = useNavigate()
   const sign = getSunSign(user?.birthdate)
+
+  useEffect(() => {
+    if (!user?.telegram_id) return
+    fetchForecast(user.telegram_id)
+      .then(data => setEnergy(data))
+      .catch(() => {})
+  }, [user])
 
   return (
     <div className="page home-page fade-in">
@@ -88,10 +92,10 @@ export default function Home({ user }) {
       <div className="card energy-card" onClick={() => navigate('/energy')}>
         <div className="energy-top">
           <span className="energy-label">🌙 Энергия дня:</span>
-          <span className="energy-score gold">{mockEnergy.score}/10</span>
+          <span className="energy-score gold">{energy ? `${energy.energy}/10` : '...'}</span>
         </div>
-        <p className="energy-moon">{mockEnergy.moon}</p>
-        <p className="energy-tip">{mockEnergy.tip}</p>
+        <p className="energy-moon">{energy ? energy.moon : 'Загружаем...'}</p>
+        <p className="energy-tip">{energy ? energy.advice : ''}</p>
       </div>
 
     </div>

@@ -82,7 +82,7 @@ export default function App() {
           <Route path="/forecasts" element={<Forecasts user={user} />} />
           <Route path="/compatibility" element={<Compatibility user={user} />} />
           <Route path="/premium" element={<Premium user={user} />} />
-          <Route path="/energy" element={<EnergyDay />} />
+          <Route path="/energy" element={<EnergyDay user={user} />} />
         </Routes>
         <BottomNav />
       </div>
