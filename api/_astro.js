@@ -188,10 +188,10 @@ async function generateCompatibility(sign1, sign2) {
     console.error('COMPAT GEMINI ERROR:', e.message)
     return {
       score, elements: `${e1} + ${e2}`,
-      summary: `Союз ${sign1} и ${sign2} полон потенциала. Каждая пара уникальна, и звёзды лишь указывают путь.`,
-      strengths: 'Взаимное притяжение и интерес друг к другу.',
-      challenges: 'Необходимость находить компромиссы.',
-      advice: 'Уважайте различия друг друга — в них ваша сила.'
+      summary: `ОШИБКА: ${e.message}`,
+      strengths: 'debug',
+      challenges: 'debug',
+      advice: 'debug'
     }
   }
 }
