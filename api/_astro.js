@@ -92,7 +92,7 @@ async function sbSaveForecast(tgId, today, content) {
 
 async function callGemini(prompt) {
   const GEMINI_KEY = process.env.GEMINI_API_KEY
-  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -188,10 +188,10 @@ async function generateCompatibility(sign1, sign2) {
     console.error('COMPAT GEMINI ERROR:', e.message)
     return {
       score, elements: `${e1} + ${e2}`,
-      summary: `ERR: ${e.message} | KEY: ${process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0,10)+'...' : 'MISSING'}`,
-      strengths: String(e),
-      challenges: 'debug',
-      advice: 'debug'
+      summary: `Союз ${sign1} и ${sign2} полон потенциала. Каждая пара уникальна, и звёзды лишь указывают путь.`,
+      strengths: 'Взаимное притяжение и интерес друг к другу.',
+      challenges: 'Необходимость находить компромиссы.',
+      advice: 'Уважайте различия друг друга — в них ваша сила.'
     }
   }
 }
