@@ -36,7 +36,8 @@ module.exports = async (req, res) => {
     }
 
     const forecast = await generateMultiForecast(user, natal, daysData)
-    res.json({ days: forecast })
+    const moonDays = daysData.map(d => ({ date: d.dateStr, day: d.dayName, moon: d.moon }))
+    res.json({ forecast, moon_days: moonDays })
   } catch (e) {
     console.error('MULTI FORECAST ERROR:', e)
     res.status(500).json({ error: e.message || String(e) })

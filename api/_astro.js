@@ -204,25 +204,28 @@ async function generateMultiForecast(user, natal, daysData) {
     return `  ${d.dateStr} (${d.dayName}): Луна в ${d.moon}, аспекты: ${asp}`
   }).join('\n')
 
-  const prompt = `Ты опытный астролог. Составь персональный прогноз для ${user.name} на ближайшие ${daysData.length} дней вперёд (все даты в будущем).
-Пиши ТОЛЬКО в будущем времени ("будет", "появится", "стоит"). Обращайся к ${user.name} на "вы".
+  const period = daysData.length <= 3 ? '3 дня' : '10 дней'
 
-Натальная карта:\n${natalDesc}\nТранзиты по будущим дням:\n${daysDesc}
+  const prompt = `Ты опытный астролог. Составь ОДИН общий прогноз для ${user.name} на ближайшие ${period}.
+Это единый прогноз на весь период, не разбивай по дням. Обращайся на "вы". Пиши в будущем времени.
 
-Ответь ТОЛЬКО валидным JSON-массивом без markdown, ровно ${daysData.length} объектов:
-[{"date":"YYYY-MM-DD","day":"День недели","moon":"Луна в X","energy":7,"highlight":"тема дня (4-5 слов)","summary":"2 предложения в будущем времени"}]`
+Натальная карта:\n${natalDesc}\nТранзиты периода:\n${daysDesc}
+
+Ответь ТОЛЬКО валидным JSON без markdown:
+{"energy":7,"summary":"общий прогноз на период (3-4 предложения)","themes":"главные темы периода (2 предложения)","best_time":"лучшее время/дни периода","advice":"главный совет (1-2 предложения)"}`
 
   try {
-    const result = await callAI(prompt)
-    return Array.isArray(result) ? result : daysData.map(d => fallbackDay(d))
+    return await callAI(prompt)
   } catch (e) {
     console.error('MULTI FORECAST ERROR:', e.message)
-    return daysData.map(d => fallbackDay(d))
+    return {
+      energy: 6,
+      summary: `Этот период будет благоприятным для ${user.name}. Планеты поддерживают ваши начинания и помогут двигаться вперёд.`,
+      themes: 'Основные темы — развитие и новые возможности. Хорошее время для планирования.',
+      best_time: 'Середина периода',
+      advice: 'Доверяйте своей интуиции и действуйте решительно.'
+    }
   }
-}
-
-function fallbackDay(d) {
-  return { date: d.dateStr, day: d.dayName, moon: `Луна в ${d.moon}`, energy: 6, highlight: 'Спокойный день', summary: 'Хороший день для планирования и общения с близкими.' }
 }
 
 module.exports = { calcPositions, findAspects, geocode, sbGetUser, sbGetForecast, sbSaveForecast, generateForecast, generateCompatibility, generateMultiForecast, DAYS_RU }
