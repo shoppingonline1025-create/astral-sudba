@@ -90,17 +90,16 @@ async function sbSaveForecast(tgId, today, content) {
   })
 }
 
-async function callGemini(prompt) {
-  const GEMINI_KEY = process.env.GEMINI_API_KEY
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_KEY}`
-  const res = await fetch(url, {
+async function callAI(prompt) {
+  const GROQ_KEY = process.env.GROQ_API_KEY
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
+    body: JSON.stringify({ model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: prompt }] })
   })
   const data = await res.json()
   if (data.error) throw new Error(data.error.message)
-  const text = data.candidates[0].content.parts[0].text.trim()
+  const text = data.choices[0].message.content.trim()
   const match = text.match(/\{[\s\S]*\}/)
   if (!match) throw new Error('No JSON: ' + text.substring(0, 100))
   return JSON.parse(match[0])
@@ -131,7 +130,7 @@ ${aspDesc}
 {"title":"заголовок (5-7 слов)","energy":<1-10>,"moon":"Луна в ${transits.Moon.sign}","summary":"общий прогноз (3-4 предложения)","career":"карьера (2-3 предложения)","love":"отношения (2 предложения)","health":"здоровье (1-2 предложения)","best_time":"лучшее время","advice":"совет дня (1 предложение)"}`
 
   try {
-    return await callGemini(prompt)
+    return await callAI(prompt)
   } catch (e) {
     console.error('FORECAST GEMINI ERROR:', e.message)
     return {
@@ -182,16 +181,16 @@ async function generateCompatibility(sign1, sign2) {
 {"summary":"общее описание пары (2-3 предложения)","strengths":"главная сильная сторона этого союза (1 предложение)","challenges":"главная трудность (1 предложение)","advice":"совет для этой пары (1 предложение)"}`
 
   try {
-    const ai = await callGemini(prompt)
+    const ai = await callAI(prompt)
     return { score, elements: `${e1} + ${e2}`, ...ai }
   } catch (e) {
     console.error('COMPAT GEMINI ERROR:', e.message)
     return {
       score, elements: `${e1} + ${e2}`,
-      summary: `ОШИБКА: ${e.message}`,
-      strengths: 'debug',
-      challenges: 'debug',
-      advice: 'debug'
+      summary: `Союз ${sign1} и ${sign2} — это интересное сочетание ${e1} и ${e2} стихий. Каждая пара уникальна.`,
+      strengths: 'Взаимное притяжение и желание понять друг друга.',
+      challenges: 'Различия в темпераменте требуют терпения.',
+      advice: 'Уважайте индивидуальность друг друга — в этом ваша сила.'
     }
   }
 }
