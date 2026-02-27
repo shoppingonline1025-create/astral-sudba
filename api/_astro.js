@@ -100,7 +100,7 @@ async function callAI(prompt) {
   const data = await res.json()
   if (data.error) throw new Error(data.error.message)
   const text = data.choices[0].message.content.trim()
-  const match = text.match(/\{[\s\S]*\}/)
+  const match = text.match(/(\[[\s\S]*\]|\{[\s\S]*\})/)
   if (!match) throw new Error('No JSON: ' + text.substring(0, 100))
   return JSON.parse(match[0])
 }
