@@ -16,6 +16,12 @@ export async function fetchMultiForecast(telegramId, days) {
   return res.json()
 }
 
+export async function clearCache(telegramId) {
+  const res = await fetch(`/api/clear-cache?id=${telegramId}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Ошибка очистки кэша')
+  return res.json()
+}
+
 export async function fetchCompatibility(sign1, sign2) {
   const res = await fetch(`/api/compatibility?sign1=${encodeURIComponent(sign1)}&sign2=${encodeURIComponent(sign2)}`)
   if (!res.ok) throw new Error('Ошибка расчёта совместимости')

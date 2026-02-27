@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchForecast } from '../lib/api'
+import { fetchForecast, clearCache } from '../lib/api'
 import './Forecasts.css'
 
 export default function Forecasts({ user }) {
   const [forecast, setForecast] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [refreshing, setRefreshing] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -17,12 +18,36 @@ export default function Forecasts({ user }) {
       .catch(() => { setError('Не удалось загрузить прогноз'); setLoading(false) })
   }, [user])
 
+  async function handleRefresh() {
+    if (!user?.telegram_id || refreshing) return
+    setRefreshing(true)
+    // Очищаем localStorage (кэш многодневных прогнозов)
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('multiForecast_')) localStorage.removeItem(k)
+    })
+    // Очищаем кэш дневного прогноза в Supabase
+    try { await clearCache(user.telegram_id) } catch {}
+    // Перезагружаем прогноз
+    setForecast(null)
+    setError(null)
+    setLoading(true)
+    fetchForecast(user.telegram_id)
+      .then(data => { setForecast(data); setLoading(false) })
+      .catch(() => { setError('Не удалось загрузить прогноз'); setLoading(false) })
+      .finally(() => setRefreshing(false))
+  }
+
   return (
     <div className="page forecasts-page fade-in">
       <div className="page-header">
         <button className="back-btn" onClick={() => navigate('/')}>‹</button>
         <h1>Прогнозы</h1>
-        <div style={{ width: 30 }} />
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing || loading}
+          style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', opacity: refreshing ? 0.4 : 1, transition: 'opacity 0.2s' }}
+          title="Обновить прогноз"
+        >🔄</button>
       </div>
 
       {loading && (
