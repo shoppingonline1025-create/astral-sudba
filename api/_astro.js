@@ -121,12 +121,11 @@ ${aspDesc}
   try {
     const result = await model.generateContent(prompt)
     let text = result.response.text().trim()
-    if (text.includes('```')) {
-      text = text.split('```')[1]
-      if (text.startsWith('json')) text = text.slice(4)
-    }
-    return JSON.parse(text.trim())
-  } catch {
+    const match = text.match(/\{[\s\S]*\}/)
+    if (!match) throw new Error('No JSON in response')
+    return JSON.parse(match[0])
+  } catch (e) {
+    console.error('FORECAST GEMINI ERROR:', e)
     return {
       title: 'День новых возможностей', energy: 7,
       moon: `Луна в ${transits.Moon.sign}`,
@@ -182,13 +181,12 @@ async function generateCompatibility(sign1, sign2) {
   try {
     const result = await model.generateContent(prompt)
     let text = result.response.text().trim()
-    if (text.includes('```')) {
-      text = text.split('```')[1]
-      if (text.startsWith('json')) text = text.slice(4)
-    }
-    const ai = JSON.parse(text.trim())
+    const match = text.match(/\{[\s\S]*\}/)
+    if (!match) throw new Error('No JSON in response')
+    const ai = JSON.parse(match[0])
     return { score, elements: `${e1} + ${e2}`, ...ai }
-  } catch {
+  } catch (e) {
+    console.error('COMPAT GEMINI ERROR:', e)
     return {
       score, elements: `${e1} + ${e2}`,
       summary: `${sign1} и ${sign2} создают интересный союз. Стихии ${e1} и ${e2} дополняют друг друга.`,
