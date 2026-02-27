@@ -188,10 +188,10 @@ async function generateCompatibility(sign1, sign2) {
     console.error('COMPAT GEMINI ERROR:', e.message)
     return {
       score, elements: `${e1} + ${e2}`,
-      summary: `${sign1} и ${sign2} создают интересный союз. Стихии ${e1} и ${e2} дополняют друг друга.`,
-      strengths: 'Взаимодополняющие качества делают этот союз уникальным.',
-      challenges: 'Потребуется взаимное понимание и терпение.',
-      advice: 'Открытый диалог — ключ к гармонии.'
+      summary: `ERR: ${e.message} | KEY: ${process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0,10)+'...' : 'MISSING'}`,
+      strengths: String(e),
+      challenges: 'debug',
+      advice: 'debug'
     }
   }
 }
