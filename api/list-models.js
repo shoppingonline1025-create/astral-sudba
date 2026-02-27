@@ -6,8 +6,10 @@ module.exports = async (req, res) => {
   try {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`)
     const data = await r.json()
-    const names = (data.models || []).map(m => m.name)
-    res.json({ models: names })
+    const flash = (data.models || [])
+      .filter(m => m.name.includes('flash') && (m.supportedGenerationMethods || []).includes('generateContent'))
+      .map(m => m.name)
+    res.json({ flash_models: flash })
   } catch (e) {
     res.json({ error: e.message })
   }
