@@ -204,10 +204,13 @@ async function generateMultiForecast(user, natal, daysData) {
     return `  ${d.dateStr} (${d.dayName}): Луна в ${d.moon}, аспекты: ${asp}`
   }).join('\n')
 
-  const prompt = `Ты астролог. Составь краткий прогноз для ${user.name} на ${daysData.length} дней.
-Натальная карта:\n${natalDesc}\nТранзиты по дням:\n${daysDesc}
-Ответь ТОЛЬКО валидным JSON-массивом без markdown, ровно ${daysData.length} элементов:
-[{"date":"YYYY-MM-DD","day":"День недели","moon":"Луна в X","energy":7,"highlight":"тема дня (4-5 слов)","summary":"прогноз (2 предложения)"}]`
+  const prompt = `Ты опытный астролог. Составь персональный прогноз для ${user.name} на ближайшие ${daysData.length} дней вперёд (все даты в будущем).
+Пиши ТОЛЬКО в будущем времени ("будет", "появится", "стоит"). Обращайся к ${user.name} на "вы".
+
+Натальная карта:\n${natalDesc}\nТранзиты по будущим дням:\n${daysDesc}
+
+Ответь ТОЛЬКО валидным JSON-массивом без markdown, ровно ${daysData.length} объектов:
+[{"date":"YYYY-MM-DD","day":"День недели","moon":"Луна в X","energy":7,"highlight":"тема дня (4-5 слов)","summary":"2 предложения в будущем времени"}]`
 
   try {
     const result = await callAI(prompt)
