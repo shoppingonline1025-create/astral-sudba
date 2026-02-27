@@ -91,7 +91,7 @@ async function sbSaveForecast(tgId, today, content) {
 }
 
 async function callGemini(prompt) {
-  const GEMINI_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAOskxKqsmk718oCtgcXS1fW4yBCOy90Wo'
+  const GEMINI_KEY = process.env.GEMINI_API_KEY
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`
   const res = await fetch(url, {
     method: 'POST',
@@ -188,10 +188,10 @@ async function generateCompatibility(sign1, sign2) {
     console.error('COMPAT GEMINI ERROR:', e.message)
     return {
       score, elements: `${e1} + ${e2}`,
-      summary: `ОШИБКА: ${e.message}`,
-      strengths: String(e),
-      challenges: 'debug',
-      advice: 'debug'
+      summary: `${sign1} и ${sign2} создают интересный союз. Стихии ${e1} и ${e2} дополняют друг друга.`,
+      strengths: 'Взаимодополняющие качества делают этот союз уникальным.',
+      challenges: 'Потребуется взаимное понимание и терпение.',
+      advice: 'Открытый диалог — ключ к гармонии.'
     }
   }
 }
