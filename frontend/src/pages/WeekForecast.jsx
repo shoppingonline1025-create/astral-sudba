@@ -26,27 +26,35 @@ export default function WeekForecast({ user }) {
   const [tab, setTab] = useState(3)
   const [data, setData] = useState({})
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
   const [expanded, setExpanded] = useState(0)
   const navigate = useNavigate()
 
   useEffect(() => {
     if (!user?.telegram_id) return
+    if (data[tab]?.length > 0) return
     const today = new Date().toISOString().split('T')[0]
-    const cacheKey = `multiForecast_${tab}_${today}`
+    const cacheKey = `multiForecast_v2_${tab}_${today}`
     const cached = localStorage.getItem(cacheKey)
     if (cached) {
-      setData(prev => ({ ...prev, [tab]: JSON.parse(cached) }))
-      return
+      try {
+        const parsed = JSON.parse(cached)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setData(prev => ({ ...prev, [tab]: parsed }))
+          return
+        }
+      } catch {}
     }
-    if (data[tab]) return
     setLoading(true)
+    setError(null)
     fetchMultiForecast(user.telegram_id, tab)
       .then(res => {
-        setData(prev => ({ ...prev, [tab]: res.days }))
-        localStorage.setItem(cacheKey, JSON.stringify(res.days))
+        const days = res.days || []
+        setData(prev => ({ ...prev, [tab]: days }))
+        if (days.length > 0) localStorage.setItem(cacheKey, JSON.stringify(days))
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch(e => { setError(e.message); setLoading(false) })
   }, [tab, user])
 
   const days = data[tab] || []
@@ -69,6 +77,13 @@ export default function WeekForecast({ user }) {
           <div style={{ fontSize: 40, marginBottom: 12 }}>🔮</div>
           <p style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Рассчитываем звёздный путь...</p>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 6 }}>Анализируем транзиты планет</p>
+        </div>
+      )}
+
+      {error && !loading && (
+        <div className="card" style={{ textAlign: 'center', padding: 24 }}>
+          <p style={{ color: '#ec4899', fontSize: 13 }}>{error}</p>
+          <button className="btn-primary" style={{ marginTop: 12 }} onClick={() => setData({})}>Повторить</button>
         </div>
       )}
 
