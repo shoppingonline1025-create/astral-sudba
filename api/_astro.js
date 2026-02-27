@@ -90,11 +90,23 @@ async function sbSaveForecast(tgId, today, content) {
   })
 }
 
-async function generateForecast(user, natal, transits, aspects, today) {
+async function callGemini(prompt) {
   const GEMINI_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAOskxKqsmk718oCtgcXS1fW4yBCOy90Wo'
-  const { GoogleGenerativeAI } = require('@google/generative-ai')
-  const genAI = new GoogleGenerativeAI(GEMINI_KEY)
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  })
+  const data = await res.json()
+  if (data.error) throw new Error(data.error.message)
+  const text = data.candidates[0].content.parts[0].text.trim()
+  const match = text.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('No JSON: ' + text.substring(0, 100))
+  return JSON.parse(match[0])
+}
+
+async function generateForecast(user, natal, transits, aspects, today) {
 
   const natalDesc = Object.values(natal).map(v => `  ${v.name_ru}: ${v.degree}° ${v.sign}`).join('\n')
   const aspDesc = aspects.length
@@ -119,13 +131,9 @@ ${aspDesc}
 {"title":"заголовок (5-7 слов)","energy":<1-10>,"moon":"Луна в ${transits.Moon.sign}","summary":"общий прогноз (3-4 предложения)","career":"карьера (2-3 предложения)","love":"отношения (2 предложения)","health":"здоровье (1-2 предложения)","best_time":"лучшее время","advice":"совет дня (1 предложение)"}`
 
   try {
-    const result = await model.generateContent(prompt)
-    let text = result.response.text().trim()
-    const match = text.match(/\{[\s\S]*\}/)
-    if (!match) throw new Error('No JSON in response')
-    return JSON.parse(match[0])
+    return await callGemini(prompt)
   } catch (e) {
-    console.error('FORECAST GEMINI ERROR:', e)
+    console.error('FORECAST GEMINI ERROR:', e.message)
     return {
       title: 'День новых возможностей', energy: 7,
       moon: `Луна в ${transits.Moon.sign}`,
@@ -169,24 +177,15 @@ async function generateCompatibility(sign1, sign2) {
   const score = getCompatScore(sign1, sign2)
   const e1 = ELEMENTS[sign1], e2 = ELEMENTS[sign2]
 
-  const GEMINI_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAOskxKqsmk718oCtgcXS1fW4yBCOy90Wo'
-  const { GoogleGenerativeAI } = require('@google/generative-ai')
-  const genAI = new GoogleGenerativeAI(GEMINI_KEY)
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-
   const prompt = `Ты опытный астролог. Опиши совместимость ${sign1} (${e1}) и ${sign2} (${e2}). Индекс совместимости: ${score}%.
 Ответь ТОЛЬКО валидным JSON без markdown:
 {"summary":"общее описание пары (2-3 предложения)","strengths":"главная сильная сторона этого союза (1 предложение)","challenges":"главная трудность (1 предложение)","advice":"совет для этой пары (1 предложение)"}`
 
   try {
-    const result = await model.generateContent(prompt)
-    let text = result.response.text().trim()
-    const match = text.match(/\{[\s\S]*\}/)
-    if (!match) throw new Error('No JSON in response')
-    const ai = JSON.parse(match[0])
+    const ai = await callGemini(prompt)
     return { score, elements: `${e1} + ${e2}`, ...ai }
   } catch (e) {
-    console.error('COMPAT GEMINI ERROR:', e)
+    console.error('COMPAT GEMINI ERROR:', e.message)
     return {
       score, elements: `${e1} + ${e2}`,
       summary: `${sign1} и ${sign2} создают интересный союз. Стихии ${e1} и ${e2} дополняют друг друга.`,
