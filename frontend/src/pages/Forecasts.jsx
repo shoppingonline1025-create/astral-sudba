@@ -41,6 +41,16 @@ export default function Forecasts({ user }) {
         </div>
       )}
 
+      {/* Кнопки прогноза на несколько дней */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button className="btn-primary" style={{ flex: 1, fontSize: 14 }} onClick={() => navigate('/week-forecast')}>
+          📅 На 3 дня
+        </button>
+        <button className="btn-primary" style={{ flex: 1, fontSize: 14, background: 'linear-gradient(135deg, #1d4ed8, #7c3aed)' }} onClick={() => navigate('/week-forecast')}>
+          🗓️ На 10 дней
+        </button>
+      </div>
+
       {forecast && !loading && (
         <>
           {/* Главная карточка */}

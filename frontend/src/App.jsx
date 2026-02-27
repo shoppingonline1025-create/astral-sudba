@@ -7,6 +7,7 @@ import Forecasts from './pages/Forecasts'
 import Compatibility from './pages/Compatibility'
 import Premium from './pages/Premium'
 import EnergyDay from './pages/EnergyDay'
+import WeekForecast from './pages/WeekForecast'
 import Onboarding from './pages/Onboarding'
 import { getUser, createUser } from './lib/supabase'
 
@@ -83,6 +84,7 @@ export default function App() {
           <Route path="/compatibility" element={<Compatibility user={user} />} />
           <Route path="/premium" element={<Premium user={user} />} />
           <Route path="/energy" element={<EnergyDay user={user} />} />
+          <Route path="/week-forecast" element={<WeekForecast user={user} />} />
         </Routes>
         <BottomNav />
       </div>

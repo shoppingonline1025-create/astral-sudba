@@ -195,4 +195,31 @@ async function generateCompatibility(sign1, sign2) {
   }
 }
 
-module.exports = { calcPositions, findAspects, geocode, sbGetUser, sbGetForecast, sbSaveForecast, generateForecast, generateCompatibility }
+const DAYS_RU = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота']
+
+async function generateMultiForecast(user, natal, daysData) {
+  const natalDesc = Object.values(natal).map(v => `  ${v.name_ru}: ${v.degree}° ${v.sign}`).join('\n')
+  const daysDesc = daysData.map(d => {
+    const asp = d.aspects.slice(0, 2).map(a => `${a.transit} ${a.aspect} ${a.natal}`).join(', ') || 'нет аспектов'
+    return `  ${d.dateStr} (${d.dayName}): Луна в ${d.moon}, аспекты: ${asp}`
+  }).join('\n')
+
+  const prompt = `Ты астролог. Составь краткий прогноз для ${user.name} на ${daysData.length} дней.
+Натальная карта:\n${natalDesc}\nТранзиты по дням:\n${daysDesc}
+Ответь ТОЛЬКО валидным JSON-массивом без markdown, ровно ${daysData.length} элементов:
+[{"date":"YYYY-MM-DD","day":"День недели","moon":"Луна в X","energy":7,"highlight":"тема дня (4-5 слов)","summary":"прогноз (2 предложения)"}]`
+
+  try {
+    const result = await callAI(prompt)
+    return Array.isArray(result) ? result : daysData.map(d => fallbackDay(d))
+  } catch (e) {
+    console.error('MULTI FORECAST ERROR:', e.message)
+    return daysData.map(d => fallbackDay(d))
+  }
+}
+
+function fallbackDay(d) {
+  return { date: d.dateStr, day: d.dayName, moon: `Луна в ${d.moon}`, energy: 6, highlight: 'Спокойный день', summary: 'Хороший день для планирования и общения с близкими.' }
+}
+
+module.exports = { calcPositions, findAspects, geocode, sbGetUser, sbGetForecast, sbSaveForecast, generateForecast, generateCompatibility, generateMultiForecast, DAYS_RU }

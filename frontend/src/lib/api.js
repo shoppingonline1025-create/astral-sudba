@@ -10,6 +10,12 @@ export async function fetchNatalChart(telegramId) {
   return res.json()
 }
 
+export async function fetchMultiForecast(telegramId, days) {
+  const res = await fetch(`/api/multi-forecast?id=${telegramId}&days=${days}`)
+  if (!res.ok) throw new Error('Ошибка загрузки прогноза')
+  return res.json()
+}
+
 export async function fetchCompatibility(sign1, sign2) {
   const res = await fetch(`/api/compatibility?sign1=${encodeURIComponent(sign1)}&sign2=${encodeURIComponent(sign2)}`)
   if (!res.ok) throw new Error('Ошибка расчёта совместимости')
