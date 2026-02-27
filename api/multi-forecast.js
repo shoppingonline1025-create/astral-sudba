@@ -1,4 +1,4 @@
-const { calcPositions, findAspects, geocode, sbGetUser, generateMultiForecast, DAYS_RU } = require('./_astro')
+const { calcPositions, findAspects, sbGetUser, generateMultiForecast, DAYS_RU } = require('./_astro')
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -6,13 +6,16 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end()
 
   try {
-    const { id, days } = req.query
-    if (!id) return res.status(400).json({ error: 'id required' })
+    const telegramId = parseInt(req.query.id)
+    const days = req.query.days
+    if (!telegramId) return res.status(400).json({ error: 'id required' })
 
-    const user = await sbGetUser(id)
+    const user = await sbGetUser(telegramId)
     if (!user) return res.status(404).json({ error: 'User not found' })
 
-    const natalDate = new Date(`${user.birthdate}T${user.birthtime || '12:00'}:00`)
+    const [y, m, d] = user.birthdate.split('-').map(Number)
+    const [h, min] = (user.birthtime || '12:00:00').split(':').map(Number)
+    const natalDate = new Date(Date.UTC(y, m - 1, d, h, min))
     const natal = calcPositions(natalDate)
 
     const daysCount = Math.min(parseInt(days) || 3, 10)
