@@ -36,42 +36,34 @@ async function getActivePlan(user) {
   return 'free'
 }
 
-// Claude API
-async function callClaude(prompt, model = 'claude-haiku-4-5-20251001') {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+// AI — Groq сейчас, легко переключить на Claude позже
+// Чтобы переключить на Claude: заменить GROQ_MODEL на claude-haiku-4-5 и использовать Anthropic API
+const GROQ_MODEL_FAST = 'llama-3.3-70b-versatile'   // для прогнозов и синастрии
+const GROQ_MODEL_CHAT = 'llama-3.3-70b-versatile'   // для чата
+
+async function groqRequest(messages, model) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
+      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
     },
-    body: JSON.stringify({
-      model,
-      max_tokens: 1500,
-      messages: [{ role: 'user', content: prompt }],
-    }),
+    body: JSON.stringify({ model, messages, max_tokens: 1500 }),
   })
   const data = await res.json()
   if (data.error) throw new Error(data.error.message)
-  const text = data.content[0].text.trim()
+  return data.choices[0].message.content.trim()
+}
+
+async function callClaude(prompt, model = GROQ_MODEL_FAST) {
+  const text = await groqRequest([{ role: 'user', content: prompt }], GROQ_MODEL_FAST)
   const match = text.match(/(\[[\s\S]*\]|\{[\s\S]*\})/)
   if (!match) throw new Error('No JSON in response: ' + text.substring(0, 100))
   return JSON.parse(match[0])
 }
 
-async function callClaudeText(messages, model = 'claude-haiku-4-5-20251001') {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({ model, max_tokens: 1024, messages }),
-  })
-  const data = await res.json()
-  if (data.error) throw new Error(data.error.message)
-  return data.content[0].text.trim()
+async function callClaudeText(messages, model = GROQ_MODEL_CHAT) {
+  return groqRequest(messages, GROQ_MODEL_CHAT)
 }
 
 // Астрорасчёты (astronomy-engine)
