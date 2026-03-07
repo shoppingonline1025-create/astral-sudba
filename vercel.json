@@ -3,5 +3,15 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron-forecasts",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron-reset-messages",
+      "schedule": "0 1 1 * *"
+    }
   ]
 }

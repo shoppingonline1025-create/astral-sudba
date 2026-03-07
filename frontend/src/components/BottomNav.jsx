@@ -1,30 +1,32 @@
-import { useNavigate, useLocation } from 'react-router-dom'
-import './BottomNav.css'
+import { useLocation, useNavigate } from 'react-router-dom'
 
-const navItems = [
-  { path: '/', icon: '🏠', label: 'Главная' },
-  { path: '/natal-chart', icon: '⭕', label: 'Карта' },
-  { path: '/forecasts', icon: '🔮', label: 'Прогноз' },
-  { path: '/compatibility', icon: '💜', label: 'Совмест.' },
-  { path: '/premium', icon: '⭐', label: 'Премиум' },
+const TABS = [
+  { path: '/',          icon: '🌙', label: 'Главная' },
+  { path: '/forecast',  icon: '🔮', label: 'Прогноз' },
+  { path: '/chat',      icon: '💬', label: 'Астролог' },
+  { path: '/synastry',  icon: '💕', label: 'Пара' },
+  { path: '/profile',   icon: '☿',  label: 'Профиль' },
 ]
 
 export default function BottomNav() {
-  const navigate = useNavigate()
   const location = useLocation()
+  const navigate = useNavigate()
 
   return (
     <nav className="bottom-nav">
-      {navItems.map(item => (
-        <button
-          key={item.path}
-          className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
-          onClick={() => navigate(item.path)}
-        >
-          <span className="nav-icon">{item.icon}</span>
-          <span className="nav-label">{item.label}</span>
-        </button>
-      ))}
+      {TABS.map(tab => {
+        const active = location.pathname === tab.path
+        return (
+          <button
+            key={tab.path}
+            className={`nav-item${active ? ' active' : ''}`}
+            onClick={() => navigate(tab.path)}
+          >
+            <span className="nav-icon">{tab.icon}</span>
+            <span className="nav-label">{tab.label}</span>
+          </button>
+        )
+      })}
     </nav>
   )
 }
