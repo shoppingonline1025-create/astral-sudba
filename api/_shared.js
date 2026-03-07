@@ -1,6 +1,6 @@
 // Supabase
-const SB_URL = process.env.SUPABASE_URL
-const SB_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
+const SB_URL = process.env.SUPABASE_URL || 'https://hkurtoonrpxnrspmuzgt.supabase.co'
+const SB_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || 'sb_publishable_G3X4bzQpmaQ-GRjMRvQhhw_ft3Feab9'
 
 async function sbFetch(path, options = {}) {
   const res = await fetch(`${SB_URL}/rest/v1${path}`, {
