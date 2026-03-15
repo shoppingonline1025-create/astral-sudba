@@ -5,43 +5,59 @@ import { getActivePlan } from '../utils'
 
 const PLANS = [
   {
-    key: 'free', name: 'Бесплатно', price: null,
+    key: 'free', name: 'Бесплатно', usdt: null, stars: null,
     features: ['Натальная карта', 'Прогноз на сегодня', '5 сообщений/мес', '1 партнёр для синастрии'],
   },
   {
-    key: 'pro', name: 'PRO', price: '$5/мес', priceRub: '490₽',
+    key: 'pro', name: 'PRO', usdt: '$5/мес', stars: '375 ⭐/мес',
     badge: '★ Популярный',
     features: ['30 сообщений/мес', 'Прогноз 3 и 7 дней', 'Полная карта с расшифровкой', 'До 5 партнёров', 'Утренние уведомления'],
   },
   {
-    key: 'platinum', name: 'Платинум', price: '$9/мес', priceRub: '890₽',
+    key: 'platinum', name: 'Платинум', usdt: '$9/мес', stars: '650 ⭐/мес',
     badge: '✦ Максимум',
     features: ['80 сообщений/мес', 'Прогноз на 30 дней', 'Транзиты и прогрессии', 'Соляр (годовой прогноз)', 'До 10 партнёров', 'Экспорт PDF', 'Приоритет Sonnet'],
   },
 ]
 
 const ONE_TIME = [
-  { type: 'synastry_quick', icon: '⚡', title: 'Быстрый разбор совместимости', desc: '~1500 слов в приложении · 30 сек', price: '$4', priceRub: '360₽' },
-  { type: 'synastry_full',  icon: '📖', title: 'Полный PDF-анализ пары', desc: '15–20 страниц · все сферы жизни', price: '$9', priceRub: '810₽' },
-  { type: 'synastry_vip',   icon: '👑', title: 'VIP-анализ пары', desc: 'PDF + безлимитный чат 24ч', price: '$18', priceRub: '1620₽' },
-  { type: 'solar_forecast', icon: '☀️', title: 'Солярный прогноз на год', desc: 'PDF · 12 месяцев по всем сферам', price: '$5', priceRub: '450₽' },
-  { type: 'child_chart',    icon: '👶', title: 'Разбор карты ребёнка', desc: 'PDF · таланты и особенности', price: '$7', priceRub: '630₽' },
+  { type: 'synastry_quick', icon: '⚡', title: 'Быстрый разбор совместимости', desc: '~1500 слов в приложении · 30 сек', usdt: '$4 USDT', stars: '290 ⭐' },
+  { type: 'synastry_full',  icon: '📖', title: 'Полный PDF-анализ пары', desc: '15–20 страниц · все сферы жизни', usdt: '$9 USDT', stars: '650 ⭐' },
+  { type: 'synastry_vip',   icon: '👑', title: 'VIP-анализ пары', desc: 'PDF + безлимитный чат 24ч', usdt: '$18 USDT', stars: '1300 ⭐' },
+  { type: 'solar_forecast', icon: '☀️', title: 'Солярный прогноз на год', desc: 'PDF · 12 месяцев по всем сферам', usdt: '$5 USDT', stars: '375 ⭐' },
+  { type: 'child_chart',    icon: '👶', title: 'Разбор карты ребёнка', desc: 'PDF · таланты и особенности', usdt: '$7 USDT', stars: '500 ⭐' },
 ]
 
-export default function Shop({ user }) {
+export default function Shop({ user, setUser }) {
   const navigate = useNavigate()
   const [tab, setTab] = useState('subs')
   const [payMethod, setPayMethod] = useState('stars')
   const [loading, setLoading] = useState(null)
   const plan = getActivePlan(user)
 
-  async function handleBuy(type, productType) {
+  function getPrice(item) {
+    return payMethod === 'stars' ? item.stars : item.usdt
+  }
+
+  async function handleBuy(type) {
     if (!user?.telegram_id) return
     setLoading(type)
     try {
-      const res = await createPayment({ telegram_id: user.telegram_id, product: type, product_type: productType, method: payMethod })
-      if (res.payment_url) window.open(res.payment_url)
-      else if (res.invoice_link) window.Telegram?.WebApp?.openInvoice(res.invoice_link)
+      const res = await createPayment({ telegram_id: user.telegram_id, product: type, method: payMethod })
+      if (res.payment_url) {
+        window.open(res.payment_url)
+      } else if (res.invoice_link) {
+        window.Telegram?.WebApp?.openInvoice(res.invoice_link, (status) => {
+          if (status === 'paid' && setUser) {
+            // Обновляем пользователя из БД после успешной оплаты
+            import('../api').then(({ getUser }) => {
+              getUser(user.telegram_id).then(updated => {
+                if (updated) setUser(updated)
+              })
+            })
+          }
+        })
+      }
     } catch (e) { alert(e.message) }
     finally { setLoading(null) }
   }
@@ -93,7 +109,7 @@ export default function Shop({ user }) {
                 {p.badge && <span className={`badge ${p.key === 'platinum' ? 'badge-gold' : 'badge-purple'}`} style={{ marginLeft: 8 }}>{p.badge}</span>}
               </div>
               <div style={{ textAlign: 'right' }}>
-                {p.price && <div style={{ fontWeight: 700, color: p.key === 'platinum' ? 'var(--gold)' : 'var(--purple-light)' }}>{payMethod === 'stars' ? p.priceRub : p.price}</div>}
+                {getPrice(p) && <div style={{ fontWeight: 700, color: p.key === 'platinum' ? 'var(--gold)' : 'var(--purple-light)' }}>{getPrice(p)}</div>}
               </div>
             </div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 14 }}>
@@ -105,11 +121,11 @@ export default function Shop({ user }) {
             </ul>
             {isCurrent ? (
               <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>✓ Текущий план</div>
-            ) : p.price ? (
+            ) : getPrice(p) ? (
               <button className={`btn ${p.key === 'platinum' ? 'btn-gold' : 'btn-primary'}`}
-                onClick={() => handleBuy(p.key, 'subscription')}
+                onClick={() => handleBuy(p.key)}
                 disabled={loading === p.key}>
-                {loading === p.key ? '⏳...' : `Подключить ${payMethod === 'stars' ? p.priceRub : p.price}`}
+                {loading === p.key ? '⏳...' : `Подключить ${getPrice(p)}`}
               </button>
             ) : null}
           </div>
@@ -125,9 +141,9 @@ export default function Shop({ user }) {
               <div style={{ fontWeight: 700, marginBottom: 2 }}>{item.title}</div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>{item.desc}</div>
               <button className="btn btn-primary" style={{ padding: '10px' }}
-                onClick={() => handleBuy(item.type, 'one_time')}
+                onClick={() => handleBuy(item.type)}
                 disabled={loading === item.type}>
-                {loading === item.type ? '⏳...' : `Купить за ${payMethod === 'stars' ? item.priceRub : item.price}`}
+                {loading === item.type ? '⏳...' : `Купить за ${getPrice(item)}`}
               </button>
             </div>
           </div>

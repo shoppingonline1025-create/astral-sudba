@@ -39,7 +39,7 @@ function AppInner() {
         <Route path="/forecast"  element={<Forecast   user={user} />} />
         <Route path="/synastry"  element={<Synastry   user={user} />} />
         <Route path="/energy"    element={<Energy     user={user} />} />
-        <Route path="/shop"      element={<Shop       user={user} />} />
+        <Route path="/shop"      element={<Shop       user={user} setUser={setUser} />} />
         <Route path="/profile"   element={<Profile    user={user} setUser={setUser} />} />
       </Routes>
       {showNav && <BottomNav />}
