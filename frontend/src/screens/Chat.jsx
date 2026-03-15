@@ -36,6 +36,7 @@ export default function Chat({ user }) {
     try {
       const res = await sendMessage(user.telegram_id, text)
       setMessages(prev => [...prev, { role: 'assistant', content: res.reply }])
+      setUsed(prev => prev + 1)
     } catch (e) {
       setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Произошла ошибка. Попробуйте ещё раз.' }])
     } finally {
@@ -43,7 +44,7 @@ export default function Chat({ user }) {
     }
   }
 
-  const used = user?.messages_used_this_month || 0
+  const [used, setUsed] = useState(user?.messages_used_this_month || 0)
   const atLimit = used >= limit
 
   return (

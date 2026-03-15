@@ -76,13 +76,13 @@ export default function Home({ user }) {
         ))}
       </div>
 
-      {/* Промо (если free) */}
+      {/* Промо (если free — триал истёк) */}
       {plan === 'free' && (
         <div className="card" style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.15), rgba(29,78,216,0.15))', border: '1px solid rgba(147,51,234,0.4)', cursor: 'pointer' }}
           onClick={() => navigate('/shop')}>
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>🚀 Попробуйте PRO бесплатно</div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>72 часа без ограничений — прогнозы, чат, синастрия</div>
-          <div style={{ marginTop: 10, fontSize: 13, color: 'var(--purple-light)', fontWeight: 600 }}>Активировать триал →</div>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>⭐ Улучшите до PRO</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>30 сообщений, прогноз на 7 дней, до 5 партнёров</div>
+          <div style={{ marginTop: 10, fontSize: 13, color: 'var(--purple-light)', fontWeight: 600 }}>Улучшить до PRO →</div>
         </div>
       )}
     </div>
