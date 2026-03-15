@@ -48,10 +48,34 @@ module.exports = async (req, res) => {
     }
 
     // Команда /start
-    if (update.message?.text === '/start') {
+    if (update.message?.text?.startsWith('/start')) {
       const chatId = update.message.chat.id
-      await sendMessage(chatId, `✨ Добро пожаловать в АстроЛичность!\n\nОткройте приложение чтобы начать:`)
-      // TODO: отправить кнопку с Mini App
+      const firstName = update.message.from?.first_name || 'друг'
+      const appUrl = process.env.WEBAPP_URL || 'https://astral-sudba.vercel.app'
+
+      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          parse_mode: 'HTML',
+          text:
+            `✨ <b>Привет, ${firstName}!</b>\n\n` +
+            `Я — <b>АстроЛичность</b>, твой персональный AI-астролог.\n\n` +
+            `🔮 <b>Что я умею:</b>\n` +
+            `• Строю твою натальную карту по дате и месту рождения\n` +
+            `• Даю персональный прогноз на день, неделю и месяц\n` +
+            `• Отвечаю на вопросы как живой астролог — и помню твою карту\n` +
+            `• Рассчитываю совместимость с партнёром по звёздам\n\n` +
+            `🎁 <b>Первые 3 дня — бесплатно</b>, полный PRO-доступ.\n\n` +
+            `Нажми кнопку ниже чтобы начать 👇`,
+          reply_markup: {
+            inline_keyboard: [[
+              { text: '🌟 Открыть АстроЛичность', web_app: { url: appUrl } },
+            ]],
+          },
+        }),
+      })
     }
 
     // Pre-checkout query — автоодобрение
