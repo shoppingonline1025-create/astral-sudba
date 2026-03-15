@@ -1,15 +1,16 @@
 const { getUser, sbFetch } = require('./_shared')
 
-// Цены в Stars (1 Star ≈ 0.013 USD)
+// Цены в Stars (1 Star ≈ $0.02 для пользователя, Telegram берёт 30% комиссию)
+// Наценка +43% относительно USDT-цены чтобы получить ту же выручку
 const PRICES_STARS = {
-  pro:            3800,  // ~490₽
-  platinum:       6850,  // ~890₽
-  pro_annual:    30700,  // ~3990₽
-  synastry_quick: 2800,  // ~360₽
-  synastry_full:  6250,  // ~810₽
-  synastry_vip:  12500,  // ~1620₽
-  solar_forecast: 3450,  // ~450₽
-  child_chart:    4850,  // ~630₽
+  pro:             375,  // $5 USDT → $7.15 с наценкой → ~375 Stars
+  platinum:        650,  // $9 USDT → $12.86 → ~650 Stars
+  pro_annual:     3500,  // $48 USDT → $68.6 → ~3500 Stars
+  synastry_quick:  290,  // $4 USDT → $5.72 → ~290 Stars
+  synastry_full:   650,  // $9 USDT → $12.86 → ~650 Stars
+  synastry_vip:   1300,  // $18 USDT → $25.72 → ~1300 Stars
+  solar_forecast:  375,  // $5 USDT → $7.15 → ~375 Stars
+  child_chart:     500,  // $7 USDT → $10 → ~500 Stars
 }
 
 const PRICES_USDT = {
