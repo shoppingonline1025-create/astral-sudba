@@ -50,28 +50,37 @@ module.exports = async (req, res) => {
     const moonTip = MOON_TIPS[moonSign] || 'день полон возможностей'
 
     // Все пользователи с telegram_id
-    const users = await sbFetch('/users?select=telegram_id,name,trial_ends_at&limit=1000')
+    const users = await sbFetch('/users?select=telegram_id,name,trial_ends_at,subscription_expires_at&limit=1000')
     if (!users?.length) return res.json({ ok: true, sent: 0 })
 
     const now = Date.now()
-    const tomorrow = now + 24 * 60 * 60 * 1000
+    const oneDayMs = 24 * 60 * 60 * 1000
     let sent = 0
 
     for (const user of users) {
       if (!user.telegram_id) continue
 
-      // Проверяем — заканчивается ли триал сегодня
       const trialEnds = user.trial_ends_at ? new Date(user.trial_ends_at).getTime() : 0
-      if (trialEnds > now && trialEnds < tomorrow) {
-        // Уведомление об окончании триала
+      const subExpires = user.subscription_expires_at ? new Date(user.subscription_expires_at).getTime() : 0
+
+      const trialActive = trialEnds > now
+      const subActive = subExpires > now
+      // Триал истёк в последние 24 часа (день 4 утром)
+      const trialJustExpired = trialEnds > 0 && trialEnds < now && trialEnds > now - oneDayMs
+
+      if (trialJustExpired && !subActive) {
+        // Уведомление об окончании триала — уговариваем купить PRO
+        const name = user.name ? user.name.split(' ')[0] : 'друг'
         await sendTgMessage(
           user.telegram_id,
-          `⏰ <b>${user.name || 'Привет'}, ваш пробный период заканчивается сегодня!</b>\n\n` +
-          `За эти дни астролог узнал вас лучше. Не теряйте связь со звёздами 🌟\n\n` +
-          `Откройте приложение, чтобы продолжить с PRO.`
+          `🌙 <b>${name}, ваш пробный период завершён.</b>\n\n` +
+          `За эти 3 дня астролог изучил вашу карту и запомнил вас.\n\n` +
+          `Чтобы продолжить — выберите тариф PRO или Платинум.\n` +
+          `Первый месяц всего <b>$5</b> ✨`
         )
-      } else {
-        // Обычное утреннее уведомление
+        sent++
+      } else if (trialActive || subActive) {
+        // Утреннее уведомление только для активных пользователей (триал или подписка)
         const name = user.name ? user.name.split(' ')[0] : 'Привет'
         await sendTgMessage(
           user.telegram_id,
@@ -79,10 +88,10 @@ module.exports = async (req, res) => {
           `Луна в <b>${moonSign}</b> — ${moonTip}.\n\n` +
           `Твой персональный прогноз на сегодня готов ✨`
         )
+        sent++
       }
 
-      sent++
-      // Небольшая пауза чтобы не превысить лимиты Telegram (30 сообщений/сек)
+      // Пауза чтобы не превысить лимиты Telegram (30 сообщений/сек)
       if (sent % 25 === 0) await new Promise(r => setTimeout(r, 1000))
     }
 
