@@ -1,7 +1,7 @@
 const { sbFetch, calcPlanets } = require('./_shared')
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
-const APP_URL = process.env.WEBAPP_URL || 'https://astral-sudba.vercel.app'
+const BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim()
+const APP_URL = (process.env.WEBAPP_URL || 'https://astral-sudba.vercel.app').trim()
 
 const MOON_TIPS = {
   'Овен':      'время действовать решительно',

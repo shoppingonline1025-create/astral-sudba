@@ -52,17 +52,27 @@ module.exports = async (req, res) => {
       const chatId = update.message.chat.id
       const firstName = update.message.from?.first_name || 'друг'
       const token = process.env.TELEGRAM_BOT_TOKEN
-      const appUrl = process.env.WEBAPP_URL || 'https://astral-sudba.vercel.app'
+      const appUrl = (process.env.WEBAPP_URL || 'https://astral-sudba.vercel.app').trim()
 
       const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: chatId,
-          text: 'Привет, ' + firstName + '! Нажми кнопку чтобы открыть приложение:',
+          parse_mode: 'HTML',
+          text:
+            `✨ <b>Привет, ${firstName}!</b>\n\n` +
+            `Я — <b>АстроЛичность</b>, твой персональный AI-астролог.\n\n` +
+            `🔮 <b>Что я умею:</b>\n` +
+            `• Натальная карта по дате и месту рождения\n` +
+            `• Персональный прогноз на день, неделю и месяц\n` +
+            `• Чат с астрологом — помню твою карту\n` +
+            `• Совместимость с партнёром по звёздам\n\n` +
+            `🎁 <b>Первые 3 дня — бесплатно</b>, полный PRO-доступ.\n\n` +
+            `👇 Нажми кнопку ниже чтобы начать!`,
           reply_markup: {
             inline_keyboard: [[
-              { text: 'Открыть АстроЛичность', url: appUrl },
+              { text: '🌟 Открыть АстроЛичность', url: appUrl },
             ]],
           },
         }),
