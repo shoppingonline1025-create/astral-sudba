@@ -64,24 +64,14 @@ ${natal ? `Натальная карта:
     // Модель: sonnet для platinum, haiku для остальных
     const model = plan === 'platinum' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001'
 
-    // Формируем messages для Claude
+    // Формируем messages: история + новое сообщение
     const messages = [
       ...history.map(h => ({ role: h.role, content: h.content })),
       { role: 'user', content: message },
     ]
 
-    // Первый вызов с system prompt
-    const fullMessages = [{ role: 'user', content: systemPrompt + '\n\n' + message }]
-    const contextMessages = history.length > 0
-      ? [{ role: 'user', content: systemPrompt }, ...messages.slice(-(history.length > 0 ? history.length * 2 : 2))]
-      : fullMessages
-
-    const reply = await callClaudeText(
-      history.length === 0
-        ? [{ role: 'user', content: `${systemPrompt}\n\nПользователь: ${message}` }]
-        : [{ role: 'user', content: systemPrompt }, ...messages],
-      model
-    )
+    // system prompt передаётся отдельным параметром (правило Anthropic API)
+    const reply = await callClaudeText(messages, model, systemPrompt)
 
     // Сохраняем в историю
     await sbFetch('/chat_history', {

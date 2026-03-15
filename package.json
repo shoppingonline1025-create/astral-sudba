@@ -4,6 +4,6 @@
   },
   "dependencies": {
     "astronomy-engine": "^2.1.19",
-    "@google/generative-ai": "^0.21.0"
+    "@anthropic-ai/sdk": "^0.39.0"
   }
 }

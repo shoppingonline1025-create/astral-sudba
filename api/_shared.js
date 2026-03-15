@@ -36,34 +36,35 @@ async function getActivePlan(user) {
   return 'free'
 }
 
-// AI — Groq сейчас, легко переключить на Claude позже
-// Чтобы переключить на Claude: заменить GROQ_MODEL на claude-haiku-4-5 и использовать Anthropic API
-const GROQ_MODEL_FAST = 'llama-3.3-70b-versatile'   // для прогнозов и синастрии
-const GROQ_MODEL_CHAT = 'llama-3.3-70b-versatile'   // для чата
+// AI — Claude API (Anthropic)
+const Anthropic = require('@anthropic-ai/sdk')
 
-async function groqRequest(messages, model) {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-    },
-    body: JSON.stringify({ model, messages, max_tokens: 1500 }),
-  })
-  const data = await res.json()
-  if (data.error) throw new Error(data.error.message)
-  return data.choices[0].message.content.trim()
+function getClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 }
 
-async function callClaude(prompt, model = GROQ_MODEL_FAST) {
-  const text = await groqRequest([{ role: 'user', content: prompt }], GROQ_MODEL_FAST)
+// Возвращает JSON-объект из ответа Claude (для прогнозов, синастрии)
+async function callClaude(prompt, model = 'claude-haiku-4-5-20251001') {
+  const client = getClient()
+  const response = await client.messages.create({
+    model,
+    max_tokens: 1500,
+    messages: [{ role: 'user', content: prompt }],
+  })
+  const text = response.content[0].text.trim()
   const match = text.match(/(\[[\s\S]*\]|\{[\s\S]*\})/)
   if (!match) throw new Error('No JSON in response: ' + text.substring(0, 100))
   return JSON.parse(match[0])
 }
 
-async function callClaudeText(messages, model = GROQ_MODEL_CHAT) {
-  return groqRequest(messages, GROQ_MODEL_CHAT)
+// Возвращает текст ответа Claude (для чата)
+// messages — массив {role, content}, system — строка системного промпта (опционально)
+async function callClaudeText(messages, model = 'claude-haiku-4-5-20251001', system = null) {
+  const client = getClient()
+  const params = { model, max_tokens: 1500, messages }
+  if (system) params.system = system
+  const response = await client.messages.create(params)
+  return response.content[0].text.trim()
 }
 
 // Астрорасчёты (astronomy-engine)
@@ -100,3 +101,4 @@ function calcPlanets(date) {
 }
 
 module.exports = { sbFetch, getUser, getActivePlan, callClaude, callClaudeText, calcPlanets, signFromLong, moonDay, SIGNS }
+
