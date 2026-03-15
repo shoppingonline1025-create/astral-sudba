@@ -51,31 +51,27 @@ module.exports = async (req, res) => {
     if (update.message?.text?.startsWith('/start')) {
       const chatId = update.message.chat.id
       const firstName = update.message.from?.first_name || 'друг'
+      const token = process.env.TELEGRAM_BOT_TOKEN
       const appUrl = process.env.WEBAPP_URL || 'https://astral-sudba.vercel.app'
 
-      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      const text =
+        `✨ Привет, ${firstName}!\n\n` +
+        `Я — АстроЛичность, твой персональный AI-астролог.\n\n` +
+        `Что я умею:\n` +
+        `• Натальная карта по дате и месту рождения\n` +
+        `• Персональный прогноз на день, неделю и месяц\n` +
+        `• Чат с астрологом — помню твою карту\n` +
+        `• Совместимость с партнёром по звёздам\n\n` +
+        `Первые 3 дня — бесплатно, полный PRO-доступ.\n\n` +
+        `Открыть приложение: ${appUrl}`
+
+      const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          parse_mode: 'HTML',
-          text:
-            `✨ <b>Привет, ${firstName}!</b>\n\n` +
-            `Я — <b>АстроЛичность</b>, твой персональный AI-астролог.\n\n` +
-            `🔮 <b>Что я умею:</b>\n` +
-            `• Строю твою натальную карту по дате и месту рождения\n` +
-            `• Даю персональный прогноз на день, неделю и месяц\n` +
-            `• Отвечаю на вопросы как живой астролог — и помню твою карту\n` +
-            `• Рассчитываю совместимость с партнёром по звёздам\n\n` +
-            `🎁 <b>Первые 3 дня — бесплатно</b>, полный PRO-доступ.\n\n` +
-            `Нажми кнопку ниже чтобы начать 👇`,
-          reply_markup: {
-            inline_keyboard: [[
-              { text: '🌟 Открыть АстроЛичность', web_app: { url: appUrl } },
-            ]],
-          },
-        }),
+        body: JSON.stringify({ chat_id: chatId, text }),
       })
+      const tgData = await tgRes.json()
+      if (!tgData.ok) console.error('Telegram sendMessage error:', JSON.stringify(tgData))
     }
 
     // Pre-checkout query — автоодобрение
