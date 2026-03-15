@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { addPartner, getCompatibility } from '../api'
+import { addPartner, getCompatibility, getPartners } from '../api'
 import { getActivePlan } from '../utils'
 
 export default function Synastry({ user }) {
@@ -9,13 +9,36 @@ export default function Synastry({ user }) {
   const [form, setForm] = useState({ name: '', birth_date: '', birth_time: '', birth_place: '' })
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [partners, setPartners] = useState([])
+  const [loadingPartners, setLoadingPartners] = useState(true)
   const plan = getActivePlan(user)
+
+  useEffect(() => {
+    if (!user?.telegram_id) return
+    getPartners(user.telegram_id)
+      .then(data => setPartners(data || []))
+      .catch(() => {})
+      .finally(() => setLoadingPartners(false))
+  }, [user])
 
   async function handleCheck() {
     if (!form.birth_date || !form.name) return
     setLoading(true)
     try {
       const partner = await addPartner(user.telegram_id, form)
+      setPartners(prev => [partner, ...prev])
+      setResult(partner.synastry_json || partner)
+      setView('result')
+    } catch (e) {
+      alert(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleSelectPartner(partner) {
+    setLoading(true)
+    try {
       const compat = await getCompatibility(user.telegram_id, partner.id)
       setResult(compat)
       setView('result')
@@ -108,18 +131,46 @@ export default function Synastry({ user }) {
         <div style={{ width: 36 }} />
       </div>
 
-      <div className="card" style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 12 }}>💕</div>
-        <h2 style={{ fontWeight: 700, marginBottom: 8 }}>Синастрия пары</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
-          Астрологический анализ совместимости по натальным картам двух людей
-        </p>
-        <button className="btn btn-primary" onClick={() => setView('add')}>
-          ➕ Добавить партнёра
-        </button>
-      </div>
+      {/* Список партнёров */}
+      {loadingPartners ? (
+        <div className="card" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>⏳ Загружаем...</div>
+      ) : partners.length > 0 ? (
+        <>
+          <div style={{ fontWeight: 700, marginBottom: 4, paddingLeft: 2 }}>Ваши партнёры</div>
+          {partners.map(p => (
+            <div key={p.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+              onClick={() => handleSelectPartner(p)}>
+              <div>
+                <div style={{ fontWeight: 600 }}>{p.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{p.birth_date}</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {p.synastry_json?.score && (
+                  <span style={{ fontWeight: 800, color: p.synastry_json.score >= 70 ? 'var(--gold)' : 'var(--text)' }}>
+                    {p.synastry_json.score}%
+                  </span>
+                )}
+                <span style={{ color: 'var(--text-muted)' }}>›</span>
+              </div>
+            </div>
+          ))}
+          <button className="btn btn-outline" onClick={() => setView('add')}>➕ Добавить партнёра</button>
+        </>
+      ) : (
+        <div className="card" style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>💕</div>
+          <h2 style={{ fontWeight: 700, marginBottom: 8 }}>Синастрия пары</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
+            Астрологический анализ совместимости по натальным картам двух людей
+          </p>
+          <button className="btn btn-primary" onClick={() => setView('add')}>
+            ➕ Добавить партнёра
+          </button>
+        </div>
+      )}
 
       {/* Разовые покупки */}
+      <div style={{ fontWeight: 700, marginBottom: 4, paddingLeft: 2 }}>Углублённый анализ</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {[
           { title: '⚡ Быстрый разбор', desc: '~1500 слов · 30 сек', price: '$4', type: 'synastry_quick' },

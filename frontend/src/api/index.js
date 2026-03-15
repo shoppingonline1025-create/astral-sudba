@@ -20,6 +20,7 @@ export const getForecast = (tgId, period = 'day') => req(`/api/forecast?id=${tgI
 export const clearForecastCache = (tgId) => req(`/api/forecast?id=${tgId}`, { method: 'DELETE' })
 
 // Синастрия
+export const getPartners = (tgId) => req(`/api/synastry?id=${tgId}`)
 export const getCompatibility = (tgId, partnerId) => req(`/api/synastry?id=${tgId}&partner=${partnerId}`)
 export const addPartner = (tgId, body) => req(`/api/synastry?id=${tgId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
 
