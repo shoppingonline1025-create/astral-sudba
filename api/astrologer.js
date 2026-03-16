@@ -61,8 +61,8 @@ ${natal ? `Натальная карта:
 - Не придумывай точные даты событий
 - Прогнозы носят развлекательный характер`
 
-    // Модель: sonnet для platinum, haiku для остальных
-    const model = plan === 'platinum' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001'
+    // Модель: sonnet для platinum и trial (лучший опыт → конверсия), haiku для остальных
+    const model = ['platinum', 'trial'].includes(plan) ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001'
 
     // Формируем messages: история + новое сообщение
     const messages = [

@@ -13,7 +13,7 @@ async function sendMessage(chatId, text) {
 }
 
 async function sendDocument(chatId, pdfBuffer, filename, caption) {
-  const FormData = (await import('node:formdata')).FormData || globalThis.FormData
+  // FormData доступен глобально в Node 18+ (Vercel использует Node 18+)
   const form = new FormData()
   form.append('chat_id', String(chatId))
   form.append('caption', caption || '')
@@ -81,7 +81,8 @@ module.exports = async (req, res) => {
     if (update.message?.successful_payment) {
       const payment = update.message.successful_payment
       const chatId = update.message.chat.id
-      const payload = JSON.parse(payment.invoice_payload)
+      let payload
+      try { payload = JSON.parse(payment.invoice_payload) } catch { return }
       const { purchase_id, product, user_id, partner_id } = payload
 
       // Обновляем статус покупки
