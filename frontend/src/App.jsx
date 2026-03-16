@@ -12,6 +12,7 @@ import Synastry    from './screens/Synastry'
 import Energy      from './screens/Energy'
 import Shop        from './screens/Shop'
 import Profile     from './screens/Profile'
+import Privacy     from './screens/Privacy'
 
 // Экраны без нижней навигации
 const NO_NAV = ['/energy', '/natal', '/chat']
@@ -41,6 +42,7 @@ function AppInner() {
         <Route path="/energy"    element={<Energy     user={user} />} />
         <Route path="/shop"      element={<Shop       user={user} setUser={setUser} />} />
         <Route path="/profile"   element={<Profile    user={user} setUser={setUser} />} />
+        <Route path="/privacy"   element={<Privacy />} />
       </Routes>
       {showNav && <BottomNav />}
     </>

@@ -198,7 +198,8 @@ export default function Profile({ user, setUser }) {
       </button>
 
       <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', paddingTop: 8 }}>
-        Прогнозы носят развлекательный характер · 152-ФЗ
+        Прогнозы носят развлекательный характер ·{' '}
+        <a href="/privacy" style={{ color: 'var(--purple-light)' }}>Политика конфиденциальности</a>
       </p>
     </div>
   )
