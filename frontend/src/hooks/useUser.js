@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getUser, createUser } from '../api'
+import { identifyUser, track } from '../utils/analytics'
 
 export function useUser() {
   const [user, setUser] = useState(null)
@@ -17,8 +18,16 @@ export function useUser() {
 
     getUser(telegramId)
       .then(data => {
-        if (data?.id) { setUser(data); setLoading(false) }
-        else { setNeedOnboarding(true); setLoading(false) }
+        if (data?.id) {
+          setUser(data)
+          setLoading(false)
+          identifyUser(data)
+          track('app_opened', { plan: data.subscription_status })
+        } else {
+          setNeedOnboarding(true)
+          setLoading(false)
+          track('onboarding_started')
+        }
       })
       .catch(() => { setNeedOnboarding(true); setLoading(false) })
   }, [])
@@ -30,6 +39,8 @@ export function useUser() {
     const newUser = await createUser({ telegram_id: telegramId, name, ...formData })
     setUser(newUser)
     setNeedOnboarding(false)
+    identifyUser(newUser)
+    track('onboarding_completed', { birth_place: formData.birth_place })
   }
 
   return { user, setUser, loading, needOnboarding, completeOnboarding }

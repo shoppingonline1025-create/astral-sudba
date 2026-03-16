@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { sendMessage, getChatHistory } from '../api'
 import { getActivePlan } from '../utils'
+import { track } from '../utils/analytics'
 
 const LIMITS = { free: 5, trial: 30, pro: 30, platinum: 80 }
 
@@ -37,6 +38,7 @@ export default function Chat({ user }) {
       const res = await sendMessage(user.telegram_id, text)
       setMessages(prev => [...prev, { role: 'assistant', content: res.reply }])
       setUsed(prev => prev + 1)
+      track('chat_message_sent', { plan })
     } catch (e) {
       const isLimit = e.message?.includes('Лимит') || e.message?.includes('исчерпан')
       if (isLimit) {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPayment } from '../api'
 import { getActivePlan } from '../utils'
+import { track } from '../utils/analytics'
 
 const PLANS = [
   {
@@ -43,11 +44,13 @@ export default function Shop({ user, setUser }) {
     if (!user?.telegram_id) return
     setLoading(type)
     try {
+      track('payment_initiated', { product: type, method: payMethod })
       const res = await createPayment({ telegram_id: user.telegram_id, product: type, method: payMethod })
       if (res.payment_url) {
         window.open(res.payment_url)
       } else if (res.invoice_link) {
         window.Telegram?.WebApp?.openInvoice(res.invoice_link, (status) => {
+          if (status === 'paid') track('payment_completed', { product: type, method: payMethod })
           if (status === 'paid' && setUser) {
             // Обновляем пользователя из БД после успешной оплаты
             import('../api').then(({ getUser }) => {
