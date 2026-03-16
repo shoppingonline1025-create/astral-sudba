@@ -5,7 +5,7 @@ const TABS = [
   { path: '/forecast',  icon: '🔮', label: 'Прогноз' },
   { path: '/chat',      icon: '💬', label: 'Астролог' },
   { path: '/synastry',  icon: '💕', label: 'Пара' },
-  { path: '/profile',   icon: '☿',  label: 'Профиль' },
+  { path: '/shop',      icon: '🛍️', label: 'Магазин' },
 ]
 
 export default function BottomNav() {

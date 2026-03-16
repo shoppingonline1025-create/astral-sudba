@@ -28,7 +28,11 @@ export default function Home({ user }) {
       <StarsBg />
 
       {/* Приветствие */}
-      <div style={{ textAlign: 'center', paddingTop: 8 }}>
+      <div style={{ position: 'relative', textAlign: 'center', paddingTop: 8 }}>
+        <button onClick={() => navigate('/profile')}
+          style={{ position: 'absolute', right: 0, top: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, opacity: 0.7 }}>
+          ☿
+        </button>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
           {new Date().toLocaleDateString('ru', { weekday: 'long', day: 'numeric', month: 'long' })}
         </div>
