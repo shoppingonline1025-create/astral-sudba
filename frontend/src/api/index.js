@@ -33,3 +33,6 @@ export const checkAccess = (tgId, feature) => req(`/api/access?id=${tgId}&featur
 
 // Оплата
 export const createPayment = (body) => req('/api/payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+
+// История покупок (через Supabase напрямую — читаем из user_id)
+export const getPurchases = (tgId) => req(`/api/user?id=${tgId}&purchases=1`)

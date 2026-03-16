@@ -7,11 +7,17 @@ module.exports = async (req, res) => {
 
   const telegramId = parseInt(req.query.id)
 
-  // GET — получить пользователя
+  // GET — получить пользователя (или историю покупок если ?purchases=1)
   if (req.method === 'GET') {
     if (!telegramId) return res.status(400).json({ error: 'id required' })
     const user = await getUser(telegramId)
     if (!user) return res.status(404).json({ error: 'not found' })
+
+    if (req.query.purchases) {
+      const purchases = await sbFetch(`/one_time_purchases?user_id=eq.${user.id}&status=eq.completed&order=purchased_at.desc&limit=20`)
+      return res.json(purchases || [])
+    }
+
     return res.json(user)
   }
 
