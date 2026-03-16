@@ -105,7 +105,7 @@ module.exports = async (req, res) => {
 
       // Разовый продукт — генерируем PDF
       } else if (ONE_TIME_PRODUCTS.includes(product)) {
-        await sendMessage(chatId, `⏳ Оплата получена! Генерирую отчёт — это займёт 1–2 минуты...`)
+        await sendMessage(chatId, `⏳ Оплата получена! Составляю отчёт — это займёт 1–2 минуты...`)
         generateAndSendPDF(chatId, product, user_id, partner_id || null)
           .catch(e => console.error('PDF send error:', e))
       }
