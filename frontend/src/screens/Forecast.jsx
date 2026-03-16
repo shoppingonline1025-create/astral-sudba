@@ -70,17 +70,54 @@ export default function Forecast({ user }) {
         ))}
       </div>
 
-      {/* Заблокировано */}
+      {/* Заблокировано — размытый превью */}
       {locked && (
-        <div className="card blur-lock">
-          <div className="blur-content">
-            <h2 style={{ fontWeight: 700, marginBottom: 8 }}>✨ Прогноз на {tab === 'week' ? '7 дней' : 'месяц'}</h2>
-            <p style={{ color: 'var(--text-secondary)' }}>Подробный анализ планетарных влияний, лучшее время для важных решений и персональные рекомендации.</p>
+        <div style={{ position: 'relative' }}>
+          {/* Размытый контент */}
+          <div style={{ filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none' }}>
+            <div className="card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <h2 style={{ fontWeight: 800, fontSize: 17 }}>
+                  {tab === 'week' ? '✨ Неделя высокой энергии' : '🌙 Месяц трансформаций'}
+                </h2>
+                <span style={{ fontWeight: 800, fontSize: 20, color: 'var(--gold)' }}>8/10</span>
+              </div>
+              <div className="energy-bar" style={{ marginBottom: 10 }}>
+                <div className="energy-fill" style={{ width: '80%' }} />
+              </div>
+              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: 14 }}>
+                Планеты складываются в благоприятную конфигурацию. Венера усиливает притяжение в отношениях, Меркурий ускоряет мысли и переговоры. Это время для важных решений и новых начинаний — звёзды поддерживают ваши усилия.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              {[
+                { icon: '💼', label: 'Карьера', text: 'Благоприятный период для карьерного роста и переговоров' },
+                { icon: '💕', label: 'Любовь', text: 'Венера усиливает притяжение, возможны яркие встречи' },
+                { icon: '🧘', label: 'Здоровье', text: 'Высокий уровень энергии, хорошо для спорта' },
+              ].map(item => (
+                <div key={item.label} className="card" style={{ padding: 12 }}>
+                  <div style={{ fontSize: 20, marginBottom: 6 }}>{item.icon}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{item.label}</div>
+                  <p style={{ fontSize: 12, lineHeight: 1.5 }}>{item.text}</p>
+                </div>
+              ))}
+            </div>
+            <div className="card" style={{ textAlign: 'center' }}>
+              <span style={{ fontSize: 24 }}>🔮</span>
+              <p style={{ fontStyle: 'italic', color: 'var(--gold)', marginTop: 8, lineHeight: 1.6 }}>
+                «Доверяйте интуиции — она сейчас острее обычного. Лучшие дни: вторник и пятница.»
+              </p>
+            </div>
           </div>
-          <div className="blur-overlay">
-            <div style={{ fontSize: 32 }}>🔒</div>
-            <p style={{ fontWeight: 700, textAlign: 'center' }}>
-              {tab === 'week' ? 'Доступно в PRO' : 'Доступно в Платинум'}
+
+          {/* Оверлей */}
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, background: 'rgba(7,6,15,0.55)', borderRadius: 16 }}>
+            <div style={{ fontSize: 36 }}>🔒</div>
+            <p style={{ fontWeight: 700, textAlign: 'center', fontSize: 16 }}>
+              {tab === 'week' ? 'Прогноз на 7 дней — PRO' : 'Прогноз на месяц — Платинум'}
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', maxWidth: 220 }}>
+              {tab === 'week' ? 'От $5/мес · 30 сообщений · прогноз на неделю' : 'От $9/мес · 80 сообщений · прогноз на 30 дней'}
             </p>
             <button className="btn btn-primary" style={{ maxWidth: 200 }} onClick={() => navigate('/shop')}>
               Разблокировать →
