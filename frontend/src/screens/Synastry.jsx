@@ -218,6 +218,16 @@ export default function Synastry({ user }) {
         <div style={{ fontSize: 48, marginBottom: 8 }}>{result.score >= 70 ? '💕' : result.score >= 50 ? '🤝' : '⚡'}</div>
         <div style={{ fontSize: 48, fontWeight: 900, color: result.score >= 70 ? 'var(--gold)' : 'var(--text)' }}>{result.score}%</div>
         <div style={{ color: 'var(--text-muted)', marginTop: 4 }}>Совместимость с {activePartner?.name}</div>
+        <button
+          onClick={() => {
+            const emoji = result.score >= 70 ? '💕' : result.score >= 50 ? '🤝' : '⚡'
+            const text = `${emoji} Проверила совместимость с ${activePartner?.name} — ${result.score}%!\n\n✨ Узнай свою совместимость с партнёром в АстроЛичности:`
+            const url = `https://t.me/share/url?url=https://t.me/AstraSudbaBot&text=${encodeURIComponent(text)}`
+            window.Telegram?.WebApp?.openTelegramLink(url)
+          }}
+          style={{ marginTop: 14, background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.35)', borderRadius: 20, padding: '8px 20px', fontSize: 13, color: 'var(--purple-light)', cursor: 'pointer', fontWeight: 600 }}>
+          📤 Поделиться результатом
+        </button>
       </div>
 
       {result.summary && (
