@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end()
 
   try {
-    const { telegram_id, product, product_type, method } = req.body
+    const { telegram_id, product, product_type, method, partner_id } = req.body
     if (!telegram_id || !product) return res.status(400).json({ error: 'telegram_id, product required' })
 
     const user = await getUser(telegram_id)
@@ -40,6 +40,7 @@ module.exports = async (req, res) => {
       body: JSON.stringify({
         user_id: user.id,
         product_type: product,
+        partner_id: partner_id || null,
         payment_method: method || 'stars',
         amount_usd: PRICES_USDT[product] || 0,
         status: 'pending',
@@ -95,7 +96,7 @@ module.exports = async (req, res) => {
       body: JSON.stringify({
         title: productNames[product] || product,
         description: 'АстроЛичность — персональный AI-астролог',
-        payload: JSON.stringify({ purchase_id: purchaseId, product, user_id: user.id }),
+        payload: JSON.stringify({ purchase_id: purchaseId, product, user_id: user.id, partner_id: partner_id || null }),
         currency: 'XTR',
         prices: [{ label: productNames[product], amount: starsAmount }],
       }),
