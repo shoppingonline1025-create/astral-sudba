@@ -30,8 +30,8 @@ export default function Home({ user }) {
       {/* Приветствие */}
       <div style={{ position: 'relative', textAlign: 'center', paddingTop: 8 }}>
         <button onClick={() => navigate('/profile')}
-          style={{ position: 'absolute', right: 0, top: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, opacity: 0.7 }}>
-          ☿
+          style={{ position: 'absolute', right: 0, top: 8, background: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.3)', borderRadius: 20, cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)', padding: '4px 10px', zIndex: 10 }}>
+          Профиль
         </button>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
           {new Date().toLocaleDateString('ru', { weekday: 'long', day: 'numeric', month: 'long' })}
