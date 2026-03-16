@@ -38,7 +38,12 @@ export default function Chat({ user }) {
       setMessages(prev => [...prev, { role: 'assistant', content: res.reply }])
       setUsed(prev => prev + 1)
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Произошла ошибка. Попробуйте ещё раз.' }])
+      const isLimit = e.message?.includes('Лимит') || e.message?.includes('исчерпан')
+      if (isLimit) {
+        setUsed(limit) // показать экран лимита
+      } else {
+        setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Произошла ошибка. Попробуйте ещё раз.' }])
+      }
     } finally {
       setLoading(false)
     }
@@ -101,9 +106,19 @@ export default function Chat({ user }) {
 
         {/* Лимит исчерпан */}
         {atLimit && (
-          <div className="card" style={{ textAlign: 'center', border: '1px solid rgba(147,51,234,0.4)' }}>
-            <p style={{ marginBottom: 10 }}>Использованы все {limit} сообщений этого месяца</p>
-            <button className="btn btn-primary" onClick={() => navigate('/shop')}>Открыть PRO →</button>
+          <div className="card" style={{ textAlign: 'center', border: '1px solid rgba(147,51,234,0.4)', background: 'linear-gradient(135deg, rgba(147,51,234,0.1), rgba(29,78,216,0.1))' }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🔮</div>
+            <p style={{ fontWeight: 700, marginBottom: 6 }}>
+              Использованы все {limit} сообщений этого месяца
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>
+              {plan === 'free'
+                ? 'PRO даёт 30 сообщений в месяц — продолжим?'
+                : 'Платинум даёт 80 сообщений в месяц — продолжим?'}
+            </p>
+            <button className="btn btn-primary" onClick={() => navigate('/shop')}>
+              {plan === 'free' ? '⭐ Открыть PRO →' : '✦ Открыть Платинум →'}
+            </button>
           </div>
         )}
 
