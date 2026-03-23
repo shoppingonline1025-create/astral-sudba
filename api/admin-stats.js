@@ -62,33 +62,37 @@ module.exports = async (req, res) => {
       }))
 
     res.json({
-      // Общее
-      total_users: users.length,
-      new_last_7_days: newLast7,
-      new_last_30_days: newLast30,
+      'Всего пользователей': users.length,
+      'Новых за 7 дней': newLast7,
+      'Новых за 30 дней': newLast30,
 
-      // По тарифам
-      plans: planCounts,
+      'По тарифам': {
+        'Бесплатно': planCounts.free,
+        'Триал': planCounts.trial,
+        'PRO': planCounts.pro,
+        'Платинум': planCounts.platinum,
+      },
 
-      // Активность
-      chat_active_last_7_days: activeChatterIds.size,
-      total_chat_messages: chats.length,
-      forecasts_generated: forecasts.length,
+      'Активных в чате за 7 дней': activeChatterIds.size,
+      'Всего сообщений в чате': chats.length,
+      'Прогнозов сгенерировано': forecasts.length,
 
-      // Монетизация
-      total_purchases: completedPurchases.length,
-      total_revenue_usd: Math.round(totalRevenue * 100) / 100,
-      products: productCounts,
+      'Выполненных покупок': completedPurchases.length,
+      'Выручка USD': Math.round(totalRevenue * 100) / 100,
+      'Продукты': productCounts,
 
-      // Топ по сообщениям
-      top_users_by_messages: topUsers,
+      'Топ по сообщениям': topUsers.map(u => ({
+        'Имя': u.name,
+        'Telegram ID': u.telegram_id,
+        'Сообщений': u.messages,
+        'Тариф': u.plan,
+      })),
 
-      // Последние 5 пользователей
-      recent_users: users.slice(0, 5).map(u => ({
-        name: u.name,
-        telegram_id: u.telegram_id,
-        created_at: u.created_at,
-        plan: u.subscription_status,
+      'Последние зарегистрировались': users.slice(0, 5).map(u => ({
+        'Имя': u.name,
+        'Telegram ID': u.telegram_id,
+        'Дата': new Date(u.created_at).toLocaleString('ru-RU'),
+        'Тариф': u.subscription_status,
       })),
     })
   } catch (e) {
